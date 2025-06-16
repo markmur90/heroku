@@ -1,0 +1,138 @@
+<style>
+  /* Nueva clase para que el select luzca como un nav-link dropdown-toggle */
+  .nav-select {
+    display: inline-block;
+    color:var(--bs-nav-link-color);      /* mismo color de texto */
+    /*color: rgba(var(--bs-light-rgb), 1); */     /* mismo color de texto */
+    background-color: transparent;            /* fondo transparente */
+    border: none;                             /* sin borde */
+    padding: 0.5rem 1rem;                     /* mismo padding */
+    font-size: 1rem;                          /* misma tipografía */
+  }
+  .nav-select:focus {
+    outline: none;
+    box-shadow: none;
+  }
+  /* Aseguramos que el ícono de dropdown siga visible */
+  .nav-select.dropdown-toggle::after {
+    margin-left: .255em;
+    vertical-align: .255em;
+  }
+</style>
+
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top custom-navbar-bg">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'dashboard' %}">Banco</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <!-- Desplegable de Configuraciones y Claves -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="configDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-journal-text me-1"></i> Settings
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="configDropdown">
+            <li>
+              <a class="dropdown-item" href="{% url 'lista_configuraciones' %}">
+                <i class="bi bi-gear-fill me-1"></i> Configuraciones
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="{% url 'lista_claves' %}">
+                <i class="bi bi-key-fill me-1"></i> Claves
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <li class="nav-item">
+          <form method="get" class="mb-0">
+            <label for="entornoSelect" class="form-label visually-hidden">Seleccionar entorno</label>
+            <select id="entornoSelect" name="entorno" class="nav-select dropdown-toggle" onchange="location.href=this.value;" aria-label="Seleccionar entorno">
+              {% for opt in entornos %}
+                <option value="{% url 'cambiar_entorno' opt %}" {% if opt == entorno_actual %}selected{% endif %}>
+                  {{ opt|title }}
+                </option>
+              {% endfor %}
+            </select>
+          </form>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'list_logsGPT4' %}">
+            <i class="bi bi-journal-text me-1"></i> Historial de Logs
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'oauth2_authorize' %}">
+            <i class="bi bi-arrow-left-right me-1"></i> Autorizar
+          </a>
+        </li>  
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'oauth2_callback' %}">
+            <i class="bi bi-arrow-left-right me-1"></i> Ver Resultado
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'readme_deploy' %}">
+            <i class="bi bi-book me-1"></i> Documentación
+          </a>
+        </li>
+
+        <!-- dentro de <nav> o similar -->
+
+        <li class="nav-item ms-3">
+          <div class="btn-group" role="group" aria-label="Acciones banco">
+            <a href="{% url 'diagnostico_banco' %}" class="btn btn-outline-info btn-sm">
+              🧪 Diagnóstico
+            </a>
+            <form method="post" action="{% url 'toggle_conexion_banco' %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-warning btn-sm">
+                {% if request.session.usar_conexion_banco %}
+                  🔌 Desactivar
+                {% else %}
+                  ⚡ Activar
+                {% endif %}
+              </button>
+            </form>
+          </div>
+        </li>
+
+        <!-- dentro de <nav> o similar -->
+
+      </ul>
+
+      <div class="d-flex align-items-center">
+        <form id="oauthForm" method="post" action="{% url 'toggle_oauth' %}" novalidate>
+          {% csrf_token %}
+          <div class="form-check form-switch text-white">
+            <input class="form-check-input" type="checkbox" name="oauth_active" id="oauthToggle"
+                   onchange="this.form.submit();" {% if request.session.oauth_active %}checked{% endif %}>
+            <label class="form-check-label ms-2" for="oauthToggle">OAuth Activo</label>
+          </div>
+        </form>
+        <a class="btn btn-danger ms-3 logout-btn-opacity" href="{% url 'logout' %}">
+          <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Notificación Toast -->
+<div class="position-fixed bottom-0 end-0 p-3 oauth-toast-container">
+  <div id="oauthToast" class="toast" data-bs-autohide="false" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+      <strong class="me-auto">Autorización DB</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+      Proceso de autorización completado. Haz clic en "Ver Resultado" para ver los detalles.
+    </div>
+  </div>
+</div>

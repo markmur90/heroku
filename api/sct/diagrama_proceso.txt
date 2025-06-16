@@ -1,0 +1,29 @@
+[Usuario] 
+   │
+   ▼
+[Formulario HTML] (Captura datos: deudor, acreedor, monto, etc.)
+   │
+   ▼
+[Django View] (Valida datos → Genera XML pain.001)
+   │
+   ▼
+[Envío al Banco] (Headers: idempotency-id, OTP)
+   │
+   ▼
+[Respuesta del Banco] (XML pain.002 o error)
+   │
+   ▼
+[Visualización de Resultado]
+
+-------------------------------------------
+
+[Consulta de Estado]
+   │
+   ▼
+[Formulario HTML] (Introduce paymentId)
+   │
+   ▼
+[Django View] (Consulta al banco → Parsea XML pain.002)
+   │
+   ▼
+[Mostrar Estado: ACCP, RJCT, PDNG, etc.]
