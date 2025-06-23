@@ -273,7 +273,9 @@ LOGGING = {
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
-SESSION_COOKIE_AGE = 600
+# Amplía la duración de la sesión para evitar que expire durante
+# el flujo de autorización OAuth2.
+SESSION_COOKIE_AGE = 1800  # 30 minutos
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 DEBUG_TOOLBAR_CONFIG = {

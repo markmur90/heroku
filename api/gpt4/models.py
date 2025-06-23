@@ -99,6 +99,7 @@ class Transfer(models.Model):
     ], default='CREA')
     payment_identification = models.ForeignKey(PaymentIdentification, on_delete=models.CASCADE)
     auth_id = models.CharField(max_length=100, blank=True, null=True)
+    oauth_state = models.CharField(max_length=64, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -594,6 +594,9 @@ def oauth2_authorize(request):
         transfer = Transfer.objects.get(payment_id=payment_id)
         verifier, challenge = generate_pkce_pair()
         state = uuid.uuid4().hex
+        transfer.oauth_state = state
+        transfer.save(update_fields=['oauth_state'])
+        
         request.session.update({
             'pkce_verifier': verifier,
             'oauth_state': state,
@@ -634,7 +637,19 @@ def oauth2_callback(request):
         return redirect("dashboard")
 
     try:
-        if not request.session.get('oauth_in_progress', False):
+        state = request.GET.get('state')
+        session_state = request.session.get('oauth_state')
+        payment_id = request.session.get('current_payment_id')
+        transfer = None
+        if payment_id:
+            transfer = Transfer.objects.filter(payment_id=payment_id).first()
+        if not transfer and state:
+            transfer = Transfer.objects.filter(oauth_state=state).first()
+            if transfer:
+                request.session['current_payment_id'] = transfer.payment_id
+                request.session['oauth_state'] = state
+
+        if not request.session.get('oauth_in_progress', False) and not transfer:
             registrar_log_oauth("callback", "fallo", {"razon": "flujo_no_iniciado"}, request=request)
             registrar_log(str(Transfer.payment_id), tipo_log="ERROR", error="Flujo OAuth no iniciado", extra_info="callback sin sesión válida")
             messages.error(request, "No hay una autorización en progreso")
@@ -652,18 +667,20 @@ def oauth2_callback(request):
             messages.error(request, f"Error en autorización: {request.GET.get('error')}")
             return render(request, 'api/GPT4/oauth2_callback.html')
 
-        state = request.GET.get('state')
-        session_state = request.session.get('oauth_state')
         if state != session_state:
-            registrar_log_oauth("callback", "fallo", {
-                "razon": "state_mismatch",
-                "state_recibido": state,
-                "state_esperado": session_state
-            }, request=request)
-            registrar_log(str(Transfer.payment_id), tipo_log="ERROR", error="State mismatch en OAuth callback", extra_info=f"Recibido: {state} / Esperado: {session_state}")
-            messages.error(request, "Error de seguridad: State mismatch")
-            return render(request, 'api/GPT4/oauth2_callback.html')
-
+            if transfer and transfer.oauth_state == state:
+                request.session['oauth_state'] = state
+                session_state = state
+            else:
+                registrar_log_oauth("callback", "fallo", {
+                    "razon": "state_mismatch",
+                    "state_recibido": state,
+                    "state_esperado": session_state
+                }, request=request)
+                registrar_log(str(Transfer.payment_id), tipo_log="ERROR", error="State mismatch en OAuth callback", extra_info=f"Recibido: {state} / Esperado: {session_state}")
+                messages.error(request, "Error de seguridad: State mismatch")
+                return render(request, 'api/GPT4/oauth2_callback.html')
+            
         code = request.GET.get('code')
         verifier = request.session.pop('pkce_verifier', None)
         registrar_log_oauth("callback", "procesando", {
