@@ -1,11 +1,14 @@
 import os
-from api.configuraciones_api.models import ConfiguracionAPI
+from django.core.exceptions import ObjectDoesNotExist
 
 def obtener_config(nombre, entorno='production', por_defecto=None):
     try:
-        return ConfiguracionAPI.objects.get(nombre=nombre, entorno=entorno, activo=True).valor
-    except ConfiguracionAPI.DoesNotExist:
-        return por_defecto
+        from api.configuraciones_api.models import ConfiguracionAPI  # import lazy
+        conf = ConfiguracionAPI.objects.get(nombre=nombre, entorno=entorno)
+        return conf.valor
+    except ObjectDoesNotExist:
+        raise ValueError(f"No existe configuración para {nombre} en {entorno}")
+
 
 def get_conf(*args, **kwargs):
     return obtener_config(*args, **kwargs)

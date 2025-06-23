@@ -1,32 +1,3 @@
-# from datetime import timedelta
-# import os
-# from pathlib import Path
-# import environ
-# from django.core.exceptions import ImproperlyConfigured
-# import dj_database_url
-
-
-# BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
-# # 1. Creamos el lector de .env
-# env = environ.Env()
-
-# # 2. Detectamos el entorno (por defecto 'local') y cargamos el .env correspondiente
-# DJANGO_ENV = os.getenv('DJANGO_ENV', 'local')
-
-# env_file = BASE_DIR / ('.env.production' if DJANGO_ENV == 'production' else '.env.local')
-# if not env_file.exists():
-#     raise ImproperlyConfigured(f'No se encuentra el archivo de entorno: {env_file}')
-# env.read_env(env_file)
-
-# # Cargar dinámicamente variables desde la BD
-# try:
-#     from api.configuraciones_api.loader import cargar_variables_entorno
-#     cargar_variables_entorno(DJANGO_ENV)
-# except Exception as e:
-#     print(f"⚠️  Configuración dinámica no aplicada: {e}")
-    
-    
 from datetime import timedelta
 import os
 from pathlib import Path
@@ -41,7 +12,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env()
 
 # 2. Detectamos el entorno (por defecto 'local') y cargamos el .env correspondiente
-DJANGO_ENV = os.getenv('DJANGO_ENV', 'production')
+DJANGO_ENV = os.getenv('DJANGO_ENV', 'local')
+
+env_file = BASE_DIR / ('.env.production' if DJANGO_ENV == 'production' else '.env.local')
+if not env_file.exists():
+    raise ImproperlyConfigured(f'No se encuentra el archivo de entorno: {env_file}')
+env.read_env(env_file)
 
 # Cargar dinámicamente variables desde la BD
 def intentar_cargar_variables(entorno):
@@ -55,11 +31,6 @@ def intentar_cargar_variables(entorno):
         print(f"⚠️  Configuración dinámica no aplicada: {e}")
 
 intentar_cargar_variables(DJANGO_ENV)
-
-env_file = BASE_DIR / ('.env.production' if DJANGO_ENV == 'production' else '.env.local')
-if not env_file.exists():
-    raise ImproperlyConfigured(f'No se encuentra el archivo de entorno: {env_file}')
-env.read_env(env_file)
 
 # 3. Variables críticas
 SECRET_KEY = "MX2QfdeWkTc8ihotA_i1Hm7_4gYJQB4oVjOKFnuD6Cw"
@@ -131,8 +102,6 @@ TEMPLATES = [
 
 INTERNAL_IPS = ['127.0.0.1', '0.0.0.0', '193.150.']
 
-
-
 # 5. Plantillas de base de datos
 # DATABASES_HEROKU = {
 #     'default': dj_database_url.config(default=env('DATABASE_URL'))
@@ -201,35 +170,27 @@ REST_FRAMEWORK = {
 
 OAUTH2_PROVIDER = {'ACCESS_TOKEN_EXPIRE_SECONDS': 3600, 'OIDC_ENABLED': True}
 
+from api.configuraciones_api.loader import get_settings
 
-REDIRECT_URI = env('REDIRECT_URI')
+
+
+# URLs de la API externa
+TOKEN_URL="http://80.78.30.242:9181/oidc/token"
+AUTHORIZE_URL="http://80.78.30.242:9181/oidc/authorize"
+OTP_URL="http://80.78.30.242:9181/otp/single"
+AUTH_URL="http://80.78.30.242:9181/auth/challenges"
+API_URL="http://80.78.30.242:9181/payments"
+REDIRECT_URI="https://api.coretransapi.com/oauth2/callback/"
+ORIGIN="https://api.coretransapi.com"
+
+
+SCOPE = "sepa_credit_transfers"
+TIMEOUT_REQUEST = 3600
+
+ACCESS_TOKEN = env('ACCESS_TOKEN')
 CLIENT_ID = env('CLIENT_ID')
 CLIENT_SECRET = env('CLIENT_SECRET')
-ORIGIN = env('ORIGIN')
-TOKEN_URL = env('TOKEN_URL')
-OTP_URL = env('OTP_URL')
-AUTH_URL = env('AUTH_URL')
-API_URL = env('API_URL')
-AUTHORIZE_URL = env('AUTHORIZE_URL')
-SCOPE = env('SCOPE')
-TIMEOUT_REQUEST = 3600
-# ACCESS_TOKEN = env('ACCESS_TOKEN')
 
-# from .configuración_dinamica import (
-#     REDIRECT_URI,
-#     CLIENT_ID,
-#     CLIENT_SECRET,
-#     ORIGIN,
-#     TOKEN_URL,
-#     OTP_URL,
-#     AUTH_URL,
-#     API_URL,
-#     AUTHORIZE_URL,
-#     SCOPE,
-#     TIMEOUT_REQUEST,
-#     ACCESS_TOKEN,
-# )
-# Configuración de OAuth2
 
 OAUTH2 = {
     'CLIENT_ID': CLIENT_ID,
@@ -248,10 +209,8 @@ OAUTH2 = {
 
 }
 
-
-
-JWT_SIGNING_KEY = 'Ptf8454Jd55'
-JWT_VERIFYING_KEY = 'Ptf8454Jd55'
+JWT_SIGNING_KEY = "Ptf8454Jd55"
+JWT_VERIFYING_KEY = "Ptf8454Jd55"
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
@@ -320,8 +279,6 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 DEBUG_TOOLBAR_CONFIG = {
     'INTERCEPT_REDIRECTS': False,
 }
-
-
 
 import django_heroku
 django_heroku.settings(locals())

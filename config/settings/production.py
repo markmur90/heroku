@@ -12,7 +12,7 @@ USE_X_FORWARDED_HOST = True
 USE_OAUTH2_UI = True
 
 REDIRECT_URI = os.getenv("REDIRECT_URI", "https://api.coretransapi.com/oauth2/callback/")
-ORIGIN = os.getenv("ORIGIN", "https://api.coretransapi..com")
+ORIGIN = os.getenv("ORIGIN", "https://api.coretransapi.com")
 
 OAUTH2.update({
     "REDIRECT_URI": REDIRECT_URI,
@@ -23,4 +23,4 @@ OAUTH2.update({
 
 DATABASE_URL="postgres://markmur88:Ptf8454Jd55@localhost:5432/mydatabase"
 
-SIMULADOR_SECRET_KEY = "la_clave_del_simulador"  # O desde un .env
+SIMULADOR_SECRET_KEY = "_YRq3KaYgVk6Y4nMCEotU6gS4N3t4P6-vC0tAlwNa6c="  # O desde un .env

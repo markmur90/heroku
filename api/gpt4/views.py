@@ -20,6 +20,25 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 import hmac
 import hashlib
 from django.utils.encoding import force_bytes
+from django.views.decorators.csrf import csrf_exempt
+from datetime import datetime, timezone
+from django.views.decorators.http import require_GET
+from django.shortcuts import render
+import socket
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.shortcuts import render
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from django.http import HttpResponse
+from datetime import timedelta
+from api.gpt4.conexion import conexion_banco
+from api.gpt4.models import (
+    Debtor, DebtorAccount, Creditor, CreditorAccount, CreditorAgent,
+    PaymentIdentification, Transfer, ClientID, Kid
+)
+import uuid
 
 from config import settings
 from api.configuraciones_api.models import ConfiguracionAPI
@@ -39,14 +58,14 @@ from api.gpt4.utils import (
     refresh_access_token, registrar_log, registrar_log_oauth,
     resolver_challenge_pushtan, send_transfer, update_sca_request
 )
-from api.gpt4.conexion_banco import (
+from api.gpt4.conexion.conexion_banco import (
     hacer_request_banco,
     enviar_transferencia_conexion,
     obtener_token_desde_simulador,
     resolver_ip_dominio,
     get_settings as banco_settings,
 )
-from api.gpt4.decorators import requiere_conexion_banco
+from api.gpt4.conexion.decorators import requiere_conexion_banco
 from api.gpt4.forms import (
     ClientIDForm, CreditorAccountForm, CreditorAgentForm, CreditorForm,
     DebtorAccountForm, DebtorForm, KidForm, ScaForm,
@@ -136,11 +155,6 @@ def handle_notification(request):
             {'status': 'error', 'mensaje': str(e)},
             status=500
         )
-
-
-
-
-
 
 
 # ==== DEBTOR ====
@@ -464,11 +478,11 @@ def transfer_update_sca(request, payment_id):
                 update_sca_request(transfer, action, otp, token)
                 return redirect('transfer_detailGPT4', payment_id=payment_id)
             except Exception as e:
-                registrar_log(transfer.payment_id, {}, "", error=str(e), tipo_log='ERROR', extra_info="Error procesando SCA en vista")
+                registrar_log(transfer.payment_id, tipo_log='ERROR', error=str(e), extra_info="Error procesando SCA en vista")
                 mensaje_error = str(e)
                 return _render_transfer_detail(request, transfer, mensaje_error)
         else:
-            registrar_log(transfer.payment_id, {}, "", error="Formulario SCA inválido", tipo_log='ERROR', extra_info="Errores validación SCA")
+            registrar_log(transfer.payment_id, tipo_log='ERROR', error="Formulario SCA inválido", extra_info="Errores validación SCA")
             mensaje_error = "Por favor corrige los errores en la autorización."
             return _render_transfer_detail(request, transfer, mensaje_error)
     return render(request, 'api/GPT4/transfer_sca.html', {'form': form, 'transfer': transfer})
@@ -561,10 +575,7 @@ def descargar_pdf(request, payment_id):
         return redirect('transfer_detailGPT4', payment_id=transferencia.payment_id)
     return FileResponse(open(pdf_file, 'rb'), content_type='application/pdf', as_attachment=True, filename=os.path.basename(pdf_file))
 
-
 # ==== OAUTH2 ====
-
-
 
 def oauth2_authorize(request):
     if not settings.USE_OAUTH2_UI:
@@ -576,7 +587,7 @@ def oauth2_authorize(request):
         payment_id = request.GET.get('payment_id')
         if not payment_id:
             registrar_log_oauth("inicio_autorizacion", "error", {"error": "Falta payment_id"}, "OAuth2 requiere un payment_id", request=request)
-            registrar_log(transfer.payment_id, tipo_log="ERROR", error="OAuth2 requiere un payment_id", extra_info="Falta payment_id en GET")
+            registrar_log(payment_id, tipo_log="ERROR", error="OAuth2 requiere un payment_id", extra_info="Falta payment_id en GET")
             messages.error(request, "Debes iniciar autorización desde una transferencia específica.")
             return redirect('dashboard')
 
@@ -611,7 +622,7 @@ def oauth2_authorize(request):
 
     except Exception as e:
         registrar_log_oauth("inicio_autorizacion", "error", None, str(e), request=request)
-        registrar_log(transfer.payment_id, tipo_log="ERROR", error=str(e), extra_info="Excepción en oauth2_authorize")
+        registrar_log(str(Transfer.payment_id), tipo_log="ERROR", error=str(e), extra_info="Excepción en oauth2_authorize")
         messages.error(request, f"Error iniciando autorización OAuth2: {str(e)}")
         return render(request, 'api/GPT4/oauth2_callback.html', {'auth_url': None})
 
@@ -625,7 +636,7 @@ def oauth2_callback(request):
     try:
         if not request.session.get('oauth_in_progress', False):
             registrar_log_oauth("callback", "fallo", {"razon": "flujo_no_iniciado"}, request=request)
-            registrar_log(Transfer.payment_id, tipo_log="ERROR", error="Flujo OAuth no iniciado", extra_info="callback sin sesión válida")
+            registrar_log(str(Transfer.payment_id), tipo_log="ERROR", error="Flujo OAuth no iniciado", extra_info="callback sin sesión válida")
             messages.error(request, "No hay una autorización en progreso")
             return redirect('dashboard')
 
@@ -637,7 +648,7 @@ def oauth2_callback(request):
                 "error_description": request.GET.get('error_description', ''),
                 "params": dict(request.GET)
             }, request=request)
-            registrar_log(Transfer.payment_id, tipo_log="ERROR", error="OAuth error", extra_info=f"{request.GET}")
+            registrar_log(str(Transfer.payment_id), tipo_log="ERROR", error="OAuth error", extra_info=f"{request.GET}")
             messages.error(request, f"Error en autorización: {request.GET.get('error')}")
             return render(request, 'api/GPT4/oauth2_callback.html')
 
@@ -649,7 +660,7 @@ def oauth2_callback(request):
                 "state_recibido": state,
                 "state_esperado": session_state
             }, request=request)
-            registrar_log(Transfer.payment_id, tipo_log="ERROR", error="State mismatch en OAuth callback", extra_info=f"Recibido: {state} / Esperado: {session_state}")
+            registrar_log(str(Transfer.payment_id), tipo_log="ERROR", error="State mismatch en OAuth callback", extra_info=f"Recibido: {state} / Esperado: {session_state}")
             messages.error(request, "Error de seguridad: State mismatch")
             return render(request, 'api/GPT4/oauth2_callback.html')
 
@@ -682,11 +693,10 @@ def oauth2_callback(request):
 
     except Exception as e:
         registrar_log_oauth("callback", "error", None, str(e), request=request)
-        registrar_log(Transfer.payment_id, tipo_log="ERROR", error=str(e), extra_info="Excepción en oauth2_callback")
+        registrar_log(str(Transfer.payment_id), tipo_log="ERROR", error=str(e), extra_info="Excepción en oauth2_callback")
         request.session['oauth_success'] = False
         messages.error(request, f"Error en el proceso de autorización: {str(e)}")
         return render(request, 'api/GPT4/oauth2_callback.html')
-
 
 
 def get_oauth_logs(request):
@@ -723,7 +733,6 @@ def get_oauth_logs(request):
     })
 
 
-
 @require_POST
 def toggle_oauth(request):
     request.session['oauth_active'] = 'oauth_active' in request.POST
@@ -753,8 +762,6 @@ def list_logs(request):
     
 
 
-from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime, timezone
 
 @csrf_exempt
 def log_oauth_visual_inicio(request):
@@ -782,7 +789,6 @@ def log_oauth_visual_inicio(request):
         request=request
     )
     return JsonResponse({"status": "RJCT"})
-
 
 
 def send_transfer_view(request, payment_id):
@@ -870,8 +876,60 @@ def send_transfer_view(request, payment_id):
 
 
 @requiere_conexion_banco
-def send_transfer_conexion_view(request, payment_id):
+def send_transfer_gateway_view(request, payment_id):
+    """Unified view to handle connection, simulator and fake modes."""
+    mode = request.GET.get("mode") or "conexion"
     transfer = get_object_or_404(Transfer, payment_id=payment_id)
+
+    if mode == "fake":
+        if not get_settings()["ALLOW_FAKE_BANK"]:
+            return HttpResponseForbidden("Modo simulado desactivado")
+        if request.method == "POST":
+            transfer.status = "ACSP"
+            transfer.save()
+            registrar_log(payment_id, tipo_log="TRANSFER", extra_info="Transferencia simulada completada")
+            return JsonResponse({"status": transfer.status})
+        return render(request, "api/GPT4/transfer_send_conexion.html", {"transfer": transfer})
+
+    if mode == "simulator":
+        form = SendTransferSimulatorForm(request.POST or None)
+        settings_data = banco_settings()
+        ip_sim = resolver_ip_dominio(settings_data["DOMINIO_BANCO"])
+
+        if request.method == "GET":
+            token = obtener_token_desde_simulador("493069k1", "bar1588623")
+            if not token:
+                messages.error(request, "No se pudo obtener token del simulador.")
+                return redirect('transfer_detailGPT4', payment_id=payment_id)
+            request.session['sim_token'] = token
+            try:
+                challenge_id = crear_challenge_mtan(transfer, token, transfer.payment_id)
+                request.session['sim_challenge'] = challenge_id
+                messages.info(request, "OTP enviado por el simulador. Ingréselo para continuar.")
+            except Exception as e:
+                messages.error(request, str(e))
+                return redirect('transfer_detailGPT4', payment_id=payment_id)
+
+        if request.method == "POST" and form.is_valid():
+            otp = form.cleaned_data['otp']
+            token = request.session.get('sim_token')
+            if not token:
+                messages.error(request, "Token de simulador no disponible.")
+                return redirect('send_transfer_gateway_viewGPT4', payment_id=payment_id, mode='simulator')
+            try:
+                enviar_transferencia_conexion(request, transfer, token, otp)
+                messages.success(request, "Transferencia enviada correctamente.")
+                return redirect('transfer_detailGPT4', payment_id=payment_id)
+            except Exception as e:
+                messages.error(request, str(e))
+                return redirect('transfer_detailGPT4', payment_id=payment_id)
+
+        return render(request, "api/GPT4/send_transfer_simulator.html", {
+            "form": form,
+            "transfer": transfer,
+            "ip_simulator": ip_sim,
+        })
+
     form = SendTransferForm(request.POST or None, instance=transfer)
     token = None
 
@@ -939,7 +997,6 @@ def send_transfer_conexion_view(request, payment_id):
                 request.session.pop('current_payment_id', None)
                 messages.success(request, "Transferencia enviada correctamente.")
                 return redirect('transfer_detailGPT4', payment_id=payment_id)
-
             except Exception as e:
                 registrar_log(transfer.payment_id, tipo_log='ERROR', error=str(e), extra_info="Error enviando transferencia (conexion)")
                 messages.error(request, str(e))
@@ -951,55 +1008,6 @@ def send_transfer_conexion_view(request, payment_id):
             return redirect('transfer_detailGPT4', payment_id=payment_id)
 
     return render(request, "api/GPT4/send_transfer_conexion.html", {"form": form, "transfer": transfer})
-
-@requiere_conexion_banco
-def send_transfer_simulator_view(request, payment_id):
-    transfer = get_object_or_404(Transfer, payment_id=payment_id)
-    form = SendTransferSimulatorForm(request.POST or None)
-
-    settings_data = banco_settings()
-    ip_sim = resolver_ip_dominio(settings_data["DOMINIO_BANCO"])
-
-    if request.method == "GET":
-        token = obtener_token_desde_simulador("493069k1", "bar1588623")
-        if not token:
-            messages.error(request, "No se pudo obtener token del simulador.")
-            return redirect('transfer_detailGPT4', payment_id=payment_id)
-        request.session['sim_token'] = token
-        try:
-            challenge_id = crear_challenge_mtan(transfer, token, transfer.payment_id)
-            request.session['sim_challenge'] = challenge_id
-            messages.info(request, "OTP enviado por el simulador. Ingréselo para continuar.")
-        except Exception as e:
-            messages.error(request, str(e))
-            return redirect('transfer_detailGPT4', payment_id=payment_id)
-
-    if request.method == "POST":
-        if form.is_valid():
-            otp = form.cleaned_data['otp']
-            token = request.session.get('sim_token')
-            if not token:
-                messages.error(request, "Token de simulador no disponible.")
-                return redirect('send_transfer_simulator_viewGPT4', payment_id=payment_id)
-            try:
-                enviar_transferencia_conexion(request, transfer, token, otp)
-                messages.success(request, "Transferencia enviada correctamente.")
-                return redirect('transfer_detailGPT4', payment_id=payment_id)
-            except Exception as e:
-                messages.error(request, str(e))
-                return redirect('transfer_detailGPT4', payment_id=payment_id)
-
-    return render(request, "api/GPT4/send_transfer_simulator.html", {
-        "form": form,
-        "transfer": transfer,
-        "ip_simulator": ip_sim,
-    })
-
-
-
-
-
-# views.py
 
 
 class ClaveGeneradaListView(ListView):
@@ -1036,7 +1044,7 @@ class ClaveGeneradaDeleteView(DeleteView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['clave'] = self.object
+        context['clave'] = self.get_context_data
         return context
 
 
@@ -1075,6 +1083,7 @@ def toggle_conexion_banco(request):
 # ==== Configuración general ====
 from functools import lru_cache
 from api.configuraciones_api.helpers import get_conf
+import netifaces
 
 @lru_cache
 def get_settings():
@@ -1167,20 +1176,7 @@ def diagnostico_banco(request):
 # ============================
 # Simulación de red bancaria
 # ============================
-from django.contrib.admin.views.decorators import staff_member_required
-from django.utils.decorators import method_decorator
-from django.views import View
-from django.shortcuts import render
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from django.http import HttpResponse
-from datetime import timedelta
-from api.gpt4 import conexion_banco
-from api.gpt4.models import (
-    Debtor, DebtorAccount, Creditor, CreditorAccount, CreditorAgent,
-    PaymentIdentification, Transfer, ClientID, Kid
-)
-import uuid
+
 
 @method_decorator(staff_member_required, name='dispatch')
 class SimulacionTransferenciaView(View):
@@ -1299,15 +1295,3 @@ def bank_sim_status_transfer(request):
         data = resp
     return JsonResponse(data)
 
-
-def send_transfer_fake_view(request, payment_id):
-    """Vista simplificada para el modo de banco simulado local"""
-    if not get_settings()["ALLOW_FAKE_BANK"]:
-        return HttpResponseForbidden("Modo simulado desactivado")
-    transfer = get_object_or_404(Transfer, payment_id=payment_id)
-    if request.method == "POST":
-        transfer.status = "ACSP"
-        transfer.save()
-        registrar_log(payment_id, tipo_log="TRANSFER", extra_info="Transferencia simulada completada")
-        return JsonResponse({"status": transfer.status})
-    return render(request, "api/GPT4/transfer_send_conexion.html", {"transfer": transfer})

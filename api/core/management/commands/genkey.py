@@ -17,11 +17,11 @@ class Command(BaseCommand):
     help = "Genera clave privada ECDSA P-256, clave pública y JWKS para client_assertion OAuth2"
 
     def handle(self, *args, **kwargs):
-        keys_dir = Path(get_project_path("/home/marmur88/scripts/schemas/keys"))
-        logs_dir = Path(get_project_path("/home/marmur88/scripts/schemas/keys/logs"))
-        settings_path = Path(get_project_path("/home/marmur88/api_bank_h2/config/settings/base1.py"))
-        log_file = Path(get_project_path("/home/marmur88/scripts/schemas/keys/logs/clave_gen.log"))
-        usuario_path = Path(get_project_path("/home/marmur88/scripts/schemas/keys/client_id.key"))
+        keys_dir = Path(get_project_path("/home/markmur88/scripts/schemas/keys"))
+        logs_dir = Path(get_project_path("/home/markmur88/scripts/schemas/keys/logs"))
+        settings_path = Path(get_project_path("/home/markmur88/api_bank_h2/config/settings/base1.py"))
+        log_file = Path(get_project_path("/home/markmur88/scripts/schemas/keys/logs/clave_gen.log"))
+        usuario_path = Path(get_project_path("/home/markmur88/scripts/schemas/keys/client_id.key"))
 
         keys_dir.mkdir(parents=True, exist_ok=True)
         logs_dir.mkdir(parents=True, exist_ok=True)
@@ -119,33 +119,33 @@ class Command(BaseCommand):
             guardar_en_configuracion_api('PRIVATE_KEY_PATH', str(files["private"]))
             guardar_en_configuracion_api('PRIVATE_KEY_KID', kid)
 
-            # Actualizar settings/base1.py
-            if settings_path.exists():
-                with open(settings_path, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
+            # # Actualizar settings/base1.py
+            # if settings_path.exists():
+            #     with open(settings_path, "r", encoding="utf-8") as f:
+            #         lines = f.readlines()
 
-                key_path_line = f"PRIVATE_KEY_PATH = os.path.join(BASE_DIR, 'keys', 'ecdsa_private_key.pem')\n"
-                kid_line = f"PRIVATE_KEY_KID = '{kid}'\n"
+            #     key_path_line = f"PRIVATE_KEY_PATH = os.path.join(BASE_DIR, 'keys', 'ecdsa_private_key.pem')\n"
+            #     kid_line = f"PRIVATE_KEY_KID = '{kid}'\n"
 
-                found_key_path = any("PRIVATE_KEY_PATH" in l for l in lines)
-                found_kid = any("PRIVATE_KEY_KID" in l for l in lines)
+            #     found_key_path = any("PRIVATE_KEY_PATH" in l for l in lines)
+            #     found_kid = any("PRIVATE_KEY_KID" in l for l in lines)
 
-                if found_key_path:
-                    lines = [key_path_line if "PRIVATE_KEY_PATH" in l else l for l in lines]
-                else:
-                    lines.append("\n" + key_path_line)
+            #     if found_key_path:
+            #         lines = [key_path_line if "PRIVATE_KEY_PATH" in l else l for l in lines]
+            #     else:
+            #         lines.append("\n" + key_path_line)
 
-                if found_kid:
-                    lines = [kid_line if "PRIVATE_KEY_KID" in l else l for l in lines]
-                else:
-                    lines.append(kid_line)
+            #     if found_kid:
+            #         lines = [kid_line if "PRIVATE_KEY_KID" in l else l for l in lines]
+            #     else:
+            #         lines.append(kid_line)
 
-                with open(settings_path, "w", encoding="utf-8") as f:
-                    f.writelines(lines)
+            #     with open(settings_path, "w", encoding="utf-8") as f:
+            #         f.writelines(lines)
 
-                self.stdout.write(self.style.SUCCESS(f"🛠️ base1.py actualizado con ruta y KID."))
-            else:
-                self.stdout.write(self.style.WARNING("⚠️ No se encontró base1.py para actualizar KID."))
+            #     self.stdout.write(self.style.SUCCESS(f"🛠️ base1.py actualizado con ruta y KID."))
+            # else:
+            #     self.stdout.write(self.style.WARNING("⚠️ No se encontró base1.py para actualizar KID."))
 
         except Exception as e:
             ClaveGenerada.objects.create(usuario=usuario, estado="ERROR", mensaje_error=str(e))

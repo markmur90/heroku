@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Enviar Transferencia</h2>
+<form method="post">
+    {% csrf_token %}
+    <div>
+        <label>Usuario bancario</label>
+        <input type="text" name="username" required />
+    </div>
+    <div>
+        <label>Contraseña</label>
+        <input type="password" name="password" required />
+    </div>
+    <div>
+        <label>Código OTP</label>
+        <input type="text" name="otp" required />
+    </div>
+    <div>
+        <label>Cuenta origen</label>
+        <input type="text" name="from_account" required />
+    </div>
+    <div>
+        <label>Cuenta destino</label>
+        <input type="text" name="to_account" required />
+    </div>
+    <div>
+        <label>Monto</label>
+        <input type="number" step="0.01" name="amount" required />
+    </div>
+    <div>
+        <label>Moneda</label>
+        <input type="text" name="currency" required />
+    </div>
+    <div>
+        <label>Referencia</label>
+        <input type="text" name="reference" required />
+    </div>
+    <button type="submit">Enviar</button>
+</form>
+
+{% if incoming %}
+<h3>Transferencias entrantes</h3>
+<table>
+    <thead>
+        <tr><th>ID</th><th>De</th><th>Monto</th><th>Fecha</th></tr>
+    </thead>
+    <tbody>
+        {% for t in incoming %}
+        <tr>
+            <td>{{ t.id }}</td>
+            <td>{{ t.from_account }}</td>
+            <td>{{ t.amount }} {{ t.currency }}</td>
+            <td>{{ t.date }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% endblock %}
