@@ -1,0 +1,3 @@
+[2025-06-23 09:24:13] ERROR AL GUARDAR LOG EN DB para <django.db.models.query_utils.DeferredAttribute object at 0x7f8c5ed68230>: el valor es demasiado largo para el tipo character varying(64)
+
+[2025-06-23 09:24:13] ERROR [<django.db.models.query_utils.DeferredAttribute object at 0x7f8c5ed68230>]: State mismatch en OAuth callback

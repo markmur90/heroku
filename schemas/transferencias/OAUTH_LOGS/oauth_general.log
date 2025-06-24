@@ -1,0 +1,46 @@
+{
+  "timestamp": "2025-06-23 09:22:14",
+  "accion": "inicio_autorizacion",
+  "estado": "exito",
+  "metadata": {
+    "state": "73922f9c61e84a608ad933005e0dc9aa",
+    "auth_url": "http://80.78.30.242:9181/oidc/authorize?response_type=code&client_id=7c1e2c53-8cc3-4ea0-bdd6-b3423e76adc7&redirect_uri=https://api.coretransapi.com/oauth2/callback/&scope=sepa_credit_transfers&state=73922f9c61e84a608ad933005e0dc9aa&code_challenge_method=S256&code_challenge=T8Ys-VIjbwzhx5oaugyA4rGOZBUZ-I0A3OoSxTyLyHA",
+    "code_challenge": "T8Ys-VIjbwzhx5oaugyA4rGOZBUZ-I0A3OoSxTyLyHA",
+    "payment_id": "e7a73367-33e7-4898-bd88-26cd8e060533"
+  },
+  "error": null
+}
+{
+  "timestamp": "2025-06-23 09:22:14",
+  "accion": "inicio_autorizacion",
+  "estado": "exito",
+  "metadata": {
+    "state": "73922f9c61e84a608ad933005e0dc9aa",
+    "auth_url": "http://80.78.30.242:9181/oidc/authorize?response_type=code&client_id=7c1e2c53-8cc3-4ea0-bdd6-b3423e76adc7&redirect_uri=https://api.coretransapi.com/oauth2/callback/&scope=sepa_credit_transfers&state=73922f9c61e84a608ad933005e0dc9aa&code_challenge_method=S256&code_challenge=T8Ys-VIjbwzhx5oaugyA4rGOZBUZ-I0A3OoSxTyLyHA",
+    "code_challenge": "T8Ys-VIjbwzhx5oaugyA4rGOZBUZ-I0A3OoSxTyLyHA",
+    "payment_id": "e7a73367-33e7-4898-bd88-26cd8e060533"
+  },
+  "error": null
+}
+{
+  "timestamp": "2025-06-23 09:24:13",
+  "accion": "callback",
+  "estado": "fallo",
+  "metadata": {
+    "razon": "state_mismatch",
+    "state_recibido": null,
+    "state_esperado": "73922f9c61e84a608ad933005e0dc9aa"
+  },
+  "error": null
+}
+{
+  "timestamp": "2025-06-23 09:24:13",
+  "accion": "callback",
+  "estado": "fallo",
+  "metadata": {
+    "razon": "state_mismatch",
+    "state_recibido": null,
+    "state_esperado": "73922f9c61e84a608ad933005e0dc9aa"
+  },
+  "error": null
+}

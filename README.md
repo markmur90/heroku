@@ -13,6 +13,8 @@ swiftapi4 es un proyecto diseñado para proporcionar una API rápida y eficiente
    pip install -r requirements.txt
    python manage.py makemigrations
    python manage.py migrate
+   # Ejecuta nuevamente este comando tras actualizar el repositorio
+   # para aplicar migraciones nuevas (por ejemplo, la columna `oauth_state`).
    python manage.py createsuperuser
    python manage.py collectstatic --noinput
    gunicorn config.wsgi:application --bind 0.0.0.0:8000
