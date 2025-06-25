@@ -2,8 +2,11 @@
 
 import dns.resolver
 import requests
+
+from api.gpt4.conexion.conexion_ssh import ssh_request
 import socket
 import json
+import time
 
 from functools import lru_cache
 
@@ -13,6 +16,7 @@ from api.gpt4.utils import (
     generar_archivo_aml,
     validar_xml_pain001,
     validar_aml_con_xsd,
+    authorize_transfer_with_otp,
 )
 from api.configuraciones_api.helpers import get_conf
 
@@ -98,17 +102,20 @@ def hacer_request_seguro(dominio, path="/api", metodo="GET", datos=None, headers
             registrar_log("conexion", "🚫 Red no segura y ALLOW_FAKE_BANK desactivado. Cancelando.")
             return None
 
-    url = f"https://{ip_destino}{path}"
     headers["Host"] = dominio
 
     try:
-        if metodo.upper() == "GET":
-            r = requests.get(url, headers=headers, timeout=timeout, verify=False)
-        else:
-            r = requests.post(url, headers=headers, json=datos, timeout=timeout, verify=False)
+        r = ssh_request(
+            metodo.upper(),
+            dominio,
+            path,
+            headers=headers,
+            json=datos,
+            timeout=timeout,
+        )
         registrar_log("conexion", f"✅ Petición a {dominio}{path} → {r.status_code}")
         return r
-    except requests.RequestException as e:
+    except Exception as e:
         registrar_log("conexion", f"❌ Error en petición HTTPS a {dominio}: {str(e)}")
         return None
 
@@ -121,63 +128,6 @@ def puerto_activo(host, puerto, timeout=2):
         return False
 
 
-def hacer_request_banco_O(request, path="/api", metodo="GET", datos=None, headers=None):
-    conf = get_settings()
-    dominio_banco = conf["DOMINIO_BANCO"]
-    dns_banco = conf["DNS_BANCO"]
-    mock_port = conf["MOCK_PORT"]
-    timeout = conf["TIMEOUT"]
-
-    usar_conexion = request.session.get("usar_conexion_banco", False)
-    if usar_conexion:
-        if headers is not None:
-            registrar_log(
-                "conexion",
-                headers_enviados=headers,
-                request_body=datos,
-                extra_info=f"{metodo} {path} via conexion segura"
-            )
-        else:
-            registrar_log(
-                "conexion",
-                headers_enviados={},
-                request_body=datos,
-                extra_info=f"{metodo} {path} via conexion segura"
-            )
-        resp = hacer_request_seguro(dominio_banco, path, metodo, datos, headers)
-        if isinstance(resp, requests.Response):
-            registrar_log(
-                "conexion",
-                response_headers=dict(resp.headers),
-                response_text=resp.text,
-                extra_info="Respuesta conexion segura"
-            )
-        return resp
-
-    registrar_log("conexion", "🔁 Usando modo local de conexión bancaria")
-    url = f"https://{dns_banco}:{mock_port}{path}"
-    try:
-        if headers is not None:
-            registrar_log(
-                "conexion",
-                headers_enviados=headers,
-                request_body=datos,
-                extra_info=f"{metodo} {path} via mock"
-            )
-        else:
-            registrar_log(
-                "conexion",
-                headers_enviados={},
-                request_body=datos,
-                extra_info=f"{metodo} {path} via mock"
-            )
-        respuesta = requests.request(metodo, url, json=datos, headers=headers, timeout=timeout)
-        return respuesta.json()
-    except Exception as e:
-        registrar_log("conexion", f"❌ Error al conectar al VPS mock: {e}")
-        return None
-
-
 # Funciones auxiliares para peticiones autenticadas
 
 def obtener_token_desde_simulador(username, password):
@@ -186,9 +136,15 @@ def obtener_token_desde_simulador(username, password):
     conf = get_settings()
     dns_banco = conf["DNS_BANCO"]
     mock_port = conf["MOCK_PORT"]
-    url = f"https://{dns_banco}:{mock_port}/api/token/"
     try:
-        r = requests.post(url, json={"username": username, "password": password}, verify=False)
+        r = ssh_request(
+            "POST",
+            dns_banco,
+            "/api/token/",
+            remote_port=mock_port,
+            json={"username": username, "password": password},
+            timeout=conf["TIMEOUT"],
+        )
         if r.status_code == 200:
             return r.json().get("token")
         registrar_log("conexion", f"Login fallido: {r.text}")
@@ -226,17 +182,10 @@ def hacer_request_banco(request, path="/api", metodo="GET", datos=None, headers=
             registrar_log("conexion", "❌ No se pudo obtener token del simulador para oficial.")
             return {"error": "Fallo autenticación oficial"}
 
-    if usar_conexion:
+    if usar_conexion and usar_conexion == "oficial":
         return hacer_request_seguro(dominio_banco, path, metodo, datos, headers)
 
-    registrar_log("conexion", "🔁 Usando modo local de conexión bancaria")
-    url = f"https://{dns_banco}:{mock_port}{path}"
-    try:
-        respuesta = requests.request(metodo, url, json=datos, headers=headers, timeout=timeout)
-        return respuesta.json()
-    except Exception as e:
-        registrar_log("conexion", f"❌ Error al conectar al VPS mock: {e}")
-        return None
+    return hacer_request_seguro(dominio_banco, path, metodo, datos, headers)
 
 
 def enviar_transferencia_conexion(request, transfer, token: str, otp: str):
@@ -285,6 +234,11 @@ def enviar_transferencia_conexion(request, transfer, token: str, otp: str):
     transfer.auth_id = data.get("authId")
     transfer.status = data.get("transactionStatus", transfer.status)
     transfer.save()
+    if transfer.status and transfer.status.upper() in {"AUTHORIZED", "ACWP"} or transfer.auth_id:
+        try:
+            authorize_transfer_with_otp(transfer)
+        except Exception as e:
+            registrar_log(pid, tipo_log="ERROR", error=str(e), extra_info="Error en autorización OTP automática")
 
     registrar_log(pid, tipo_log="TRANSFER", extra_info="Transferencia enviada con éxito via conexion_banco")
 
@@ -297,4 +251,45 @@ def enviar_transferencia_conexion(request, transfer, token: str, otp: str):
     except Exception as e:
         registrar_log(pid, error=str(e), tipo_log="ERROR", extra_info="Error generando XML/AML posterior")
 
+
+    final_statuses = {"ACSC", "ACCC", "RJCT", "CANC"}
+    if transfer.status not in final_statuses:
+        esperar_estado_final(request, transfer, token)
+
     return resp
+
+
+def obtener_estado_transferencia(request, payment_id: str, token: str):
+    """Consulta el estado de una transferencia ya creada."""
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = hacer_request_banco(
+        request,
+        path=f"/api/transferencia/{payment_id}",
+        headers=headers,
+    )
+    if resp is None:
+        return None
+    if isinstance(resp, requests.Response):
+        try:
+            resp.raise_for_status()
+        except requests.RequestException:
+            return None
+        return resp.json()
+    return resp
+
+
+def esperar_estado_final(request, transfer, token: str, intentos: int = 10, intervalo: int = 2):
+    """Espera hasta obtener un estado final del servidor actualizando la transferencia."""
+    finales = {"ACSC", "ACCC", "RJCT", "CANC"}
+    for _ in range(intentos):
+        data = obtener_estado_transferencia(request, transfer.payment_id, token)
+        if not data:
+            break
+        status = data.get("transactionStatus")
+        if status:
+            transfer.status = status
+            transfer.save()
+            if status in finales:
+                return status
+        time.sleep(intervalo)
+    return transfer.status

@@ -57,7 +57,8 @@ from api.gpt4.utils import (
     get_access_token, get_client_credentials_token,
     obtener_ruta_schema_transferencia, read_log_file,
     refresh_access_token, registrar_log, registrar_log_oauth,
-    resolver_challenge_pushtan, send_transfer, update_sca_request
+    resolver_challenge_pushtan, send_transfer, update_sca_request,
+    wait_for_final_status
 )
 from api.gpt4.conexion.conexion_banco import (
     hacer_request_banco,
@@ -343,7 +344,7 @@ def transfer_detail(request, payment_id):
     }
 
     errores_detectados = logs_db.filter(tipo_log='ERROR')
-    mensaje_error = errores_detectados.first().contenido if errores_detectados.exists() else None
+    mensaje_error = errores_detectados.first().contenido if errores_detectados.exists() else None # type: ignore
 
     carpeta = obtener_ruta_schema_transferencia(transfer.payment_id)
     archivos_logs = {
@@ -447,6 +448,8 @@ def send_transfer_view0(request, payment_id):
             try:
                 send_transfer(transfer, final_token, otp)
                 registrar_log(transfer.payment_id, tipo_log='TRANSFER', extra_info="Transferencia enviada correctamente")
+                if transfer.status == 'PDNG':
+                    wait_for_final_status(transfer, final_token)
                 request.session.pop('access_token', None)
                 request.session.pop('refresh_token', None)
                 request.session.pop('token_expires', None)
@@ -477,6 +480,8 @@ def transfer_update_sca(request, payment_id):
             try:
                 token = get_access_token(transfer.payment_id)
                 update_sca_request(transfer, action, otp, token)
+                if transfer.status == 'PDNG':
+                    wait_for_final_status(transfer, token)
                 return redirect('transfer_detailGPT4', payment_id=payment_id)
             except Exception as e:
                 registrar_log(transfer.payment_id, tipo_log='ERROR', error=str(e), extra_info="Error procesando SCA en vista")
@@ -919,6 +924,8 @@ def send_transfer_gateway_view(request, payment_id):
                 return redirect('send_transfer_gateway_viewGPT4', payment_id=payment_id, mode='simulator')
             try:
                 enviar_transferencia_conexion(request, transfer, token, otp)
+                if transfer.status == 'PDNG':
+                    wait_for_final_status(transfer, token)
                 messages.success(request, "Transferencia enviada correctamente.")
                 return redirect('transfer_detailGPT4', payment_id=payment_id)
             except Exception as e:
@@ -991,6 +998,8 @@ def send_transfer_gateway_view(request, payment_id):
             try:
                 enviar_transferencia_conexion(request, transfer, final_token, otp)
                 registrar_log(transfer.payment_id, tipo_log='TRANSFER', extra_info="Transferencia enviada correctamente (conexion)")
+                if transfer.status == 'PDNG':
+                    wait_for_final_status(transfer, final_token)
                 request.session.pop('access_token', None)
                 request.session.pop('refresh_token', None)
                 request.session.pop('token_expires', None)
@@ -1276,6 +1285,8 @@ def bank_sim_send_transfer(request):
     otp = data.get("otp")
     transfer = get_object_or_404(Transfer, payment_id=payment_id)
     resp = enviar_transferencia_conexion(request, transfer, token, otp)
+    if transfer.status == 'PDNG':
+        wait_for_final_status(transfer, token)
     if isinstance(resp, requests.Response):
         result = resp.json()
     else:

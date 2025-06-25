@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional, Union
 from api.gpt4.utils import generar_archivo_aml, generar_xml_pain001, validar_aml_con_xsd, validar_xml_pain001
 
 # Constants for default behavior
-DEFAULT_TIMEOUT: int = 10  # seconds
+DEFAULT_TIMEOUT: int = 90  # seconds
 DEFAULT_RETRIES: int = 3
 BACKOFF_FACTOR: float = 0.3
 STATUS_FORCELIST = (500, 502, 504)

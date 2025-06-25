@@ -763,6 +763,12 @@ def send_transfer(transfer: Transfer, use_token: str = None, use_otp: str = None
     transfer.status = data.get('transactionStatus', transfer.status)
     transfer.save()
     registrar_log(pid, tipo_log='TRANSFER', extra_info="Transferencia enviada con éxito")
+    if transfer.auth_id and transfer.status in {"PDNG", "ACSP", "ACWP"}:
+        try:
+            registrar_log(pid, tipo_log='SCA', extra_info="Iniciando challenge automático")
+            completar_flujo_sca(transfer, token)
+        except Exception as e:
+            registrar_log(pid, tipo_log='ERROR', error=str(e), extra_info="Fallo en OTP automático")
     # 4️⃣ Validaciones adicionales
     try:
         xml_path = generar_xml_pain001(transfer, pid)
@@ -962,6 +968,45 @@ def fetch_transfer_details(transfer: Transfer, token: str) -> dict:
     validar_xml_con_xsd(xml_path, xsd_path="schemas/xsd/pain.002.001.03.xsd")
     registrar_log(transfer.payment_id, tipo_log='XML', extra_info="Pain002 generado y validado")
     return data
+
+
+def completar_flujo_sca(transfer: Transfer, token: str, timeout: int = 60) -> None:
+    """Realiza el flujo OTP/SCA y espera un estado final."""
+    otp, token = obtener_otp_automatico(transfer)
+    update_sca_request(transfer, "CREATE", otp, token)
+
+    start = time.time()
+    while transfer.status in {"PDNG", "ACSP", "ACWP"}:
+        time.sleep(1)
+        fetch_transfer_details(transfer, token)
+        if time.time() - start > timeout:
+            break
+
+
+
+def wait_for_final_status(transfer: Transfer, token: str, timeout: int = 120) -> str:
+    """Polls the API until the transfer reaches a final status or timeout."""
+    start = time.time()
+    while True:
+        data = fetch_transfer_details(transfer, token)
+        status = data.get('transactionStatus')
+        if status and status.upper() not in {'PDNG', 'ACWP', 'AUTHORIZED', 'ACCP'}:
+            return status
+        if time.time() - start > timeout:
+            registrar_log(
+                transfer.payment_id,
+                tipo_log='ERROR',
+                error='Timeout esperando estado final',
+            )
+            raise TimeoutError('Timeout esperando estado final')
+        time.sleep(2)
+
+
+def authorize_transfer_with_otp(transfer: Transfer) -> str:
+    """Obtains an OTP challenge to approve the transfer and waits for completion."""
+    otp, token = obtener_otp_automatico_con_challenge(transfer)
+    update_sca_request(transfer, 'APPROVE', otp, token)
+    return wait_for_final_status(transfer, token)
 
 
 def get_client_credentials_token():
