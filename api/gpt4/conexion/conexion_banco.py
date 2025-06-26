@@ -72,7 +72,18 @@ def resolver_ip_dominio(dominio):
         return None
 
 
-def hacer_request_seguro(dominio, path="/api", metodo="GET", datos=None, headers=None):
+def hacer_request_seguro(
+    dominio,
+    path="/api",
+    metodo="GET",
+    datos=None,
+    headers=None,
+    *,
+    retries: int = 3,
+    retry_delay: int = 1,
+):
+    """Realiza una petición HTTPS al banco con reintentos opcionales."""
+
     conf = get_settings()
     dominio_banco = conf["DOMINIO_BANCO"]
     dns_banco = conf["DNS_BANCO"]
@@ -104,21 +115,29 @@ def hacer_request_seguro(dominio, path="/api", metodo="GET", datos=None, headers
 
     headers["Host"] = dominio
 
-    try:
-        r = ssh_request(
-            metodo.upper(),
-            dominio,
-            path,
-            headers=headers,
-            json=datos,
-            timeout=timeout,
-        )
-        registrar_log("conexion", f"✅ Petición a {dominio}{path} → {r.status_code}")
-        return r
-    except Exception as e:
-        registrar_log("conexion", f"❌ Error en petición HTTPS a {dominio}: {str(e)}")
-        return None
-
+    for intento in range(1, retries + 1):
+        try:
+            r = ssh_request(
+                metodo.upper(),
+                dominio,
+                path,
+                headers=headers,
+                json=datos,
+                timeout=timeout,
+            )
+            registrar_log(
+                "conexion",
+                f"✅ Petición a {dominio}{path} → {r.status_code} (intento {intento})",
+            )
+            return r
+        except Exception as e:
+            registrar_log(
+                "conexion",
+                f"❌ Error en petición HTTPS a {dominio} (intento {intento}/{retries}): {str(e)}",
+            )
+            if intento == retries:
+                return None
+            time.sleep(retry_delay)
 
 def puerto_activo(host, puerto, timeout=2):
     try:

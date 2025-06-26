@@ -102,6 +102,23 @@ class Transfer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def clean(self):
+        """Validates internal consistency of the transfer."""
+        from django.core.exceptions import ValidationError
+        from django.utils import timezone
+
+        errors = {}
+        if self.debtor_account.debtor != self.debtor:
+            errors['debtor_account'] = 'La cuenta seleccionada no pertenece al deudor.'
+        if self.creditor_account.creditor != self.creditor:
+            errors['creditor_account'] = 'La cuenta seleccionada no pertenece al acreedor.'
+        if self.instructed_amount <= 0:
+            errors['instructed_amount'] = 'El monto debe ser positivo.'
+        if self.requested_execution_date < timezone.now().date():
+            errors['requested_execution_date'] = 'La fecha de ejecución no puede ser pasada.'
+        if errors:
+            raise ValidationError(errors)
+
     def to_schema_data(self):
         return {
             "purposeCode": self.purpose_code or "GDSV",
