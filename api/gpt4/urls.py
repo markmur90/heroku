@@ -36,11 +36,15 @@ urlpatterns = [
     path("transfers/<str:payment_id>/send/", views.send_transfer_view, name="send_transfer_viewGPT4"),
     
     path(
-        "transfers/<str:payment_id>/send-banco/",
+        "transfers/<str:payment_id>/send-banco/gateway/",
         views.send_transfer_gateway_view,
         name="send_transfer_gateway_viewGPT4",
-    ),  
-    path("transfers/<str:payment_id>/send-banco/", send_transfer_bank_view, name="send_transfer_bank_viewGPT4"),
+    ),
+    path(
+        "transfers/<str:payment_id>/send-banco/",
+        send_transfer_bank_view,
+        name="send_transfer_bank_viewGPT4",
+    ),
     
     # path("transfers/<str:payment_id>/send/", views.send_transfer_view4, name="send_transfer_viewGPT4"),
     path("transfers/<str:payment_id>/sca/", views.transfer_update_sca, name="transfer_update_scaGPT4"),

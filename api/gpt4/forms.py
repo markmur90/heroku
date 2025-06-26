@@ -88,6 +88,28 @@ class TransferForm(forms.ModelForm):
             }),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        amount = cleaned_data.get('instructed_amount')
+        exec_date = cleaned_data.get('requested_execution_date')
+        debtor = cleaned_data.get('debtor')
+        debtor_account = cleaned_data.get('debtor_account')
+        creditor = cleaned_data.get('creditor')
+        creditor_account = cleaned_data.get('creditor_account')
+
+        if amount is not None and amount <= 0:
+            self.add_error('instructed_amount', 'El monto debe ser positivo.')
+
+        if exec_date and exec_date < datetime.now(pytz.timezone('Europe/Berlin')).date():
+            self.add_error('requested_execution_date', 'La fecha de ejecución no puede ser pasada.')
+
+        if debtor and debtor_account and debtor_account.debtor != debtor:
+            self.add_error('debtor_account', 'La cuenta seleccionada no pertenece al deudor.')
+
+        if creditor and creditor_account and creditor_account.creditor != creditor:
+            self.add_error('creditor_account', 'La cuenta seleccionada no pertenece al acreedor.')
+
+        return cleaned_data
 
 class SendTransferForm(forms.ModelForm):
     obtain_token = forms.BooleanField(
