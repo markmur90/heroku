@@ -1,0 +1,41 @@
+body {
+    background-image: url('/static/images/background.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    color: #333; /* Asegúrate de que el texto sea legible */
+    font-family: Arial, sans-serif;
+    padding-top: 156px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;    
+}
+.card {
+    margin-top: 20px;
+}
+h1 {
+    color: #333;
+}
+form {
+    margin: 20px;
+}
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #0056b3;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+main {
+    flex: 1;
+}
