@@ -1,0 +1,63 @@
+<!-- schemas/xsd/aml_transaction_report.xsd -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="AMLTransactionReport">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Transaction">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="TransactionID" type="xs:string"/>
+              <xs:element name="TransactionType" type="xs:string"/>
+              <xs:element name="ExecutionDate" type="xs:dateTime"/>
+              <xs:element name="Amount">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:decimal">
+                      <xs:attribute name="currency" type="xs:string" use="required"/>
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="Debtor">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Name" type="xs:string"/>
+                    <xs:element name="IBAN" type="xs:string"/>
+                    <xs:element name="Country" type="xs:string"/>
+                    <xs:element name="CustomerID" type="xs:string"/>
+                    <xs:element name="KYCVerified" type="xs:boolean"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="Creditor">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Name" type="xs:string"/>
+                    <xs:element name="IBAN" type="xs:string"/>
+                    <xs:element name="BIC" type="xs:string"/>
+                    <xs:element name="Country" type="xs:string"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="Purpose" type="xs:string"/>
+              <xs:element name="Channel" type="xs:string"/>
+              <xs:element name="RiskScore" type="xs:string"/>
+              <xs:element name="PEP" type="xs:boolean"/>
+              <xs:element name="SanctionsCheck" type="xs:string"/>
+              <xs:element name="HighRiskCountry" type="xs:boolean"/>
+              <xs:element name="Flags">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="UnusualAmount" type="xs:boolean"/>
+                    <xs:element name="FrequentTransfers" type="xs:boolean"/>
+                    <xs:element name="ManualReviewRequired" type="xs:boolean"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
