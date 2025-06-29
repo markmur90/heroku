@@ -221,11 +221,3 @@ class ClaveGeneradaForm(forms.ModelForm):
             'mensaje_error',
         ]
 
-
-class SendTransferSimulatorForm(forms.Form):
-    otp = forms.CharField(
-        label='Código OTP',
-        min_length=6,
-        max_length=70,
-        widget=forms.TextInput(attrs={'class': 'form-control'})
-    )

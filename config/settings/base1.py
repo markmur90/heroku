@@ -180,6 +180,7 @@ AUTHORIZE_URL="http://80.78.30.242:9181/oidc/authorize"
 OTP_URL="http://80.78.30.242:9181/otp/single"
 AUTH_URL="http://80.78.30.242:9181/auth/challenges"
 API_URL="http://80.78.30.242:9181/payments"
+
 REDIRECT_URI="https://api.coretransapi.com/oauth2/callback/"
 ORIGIN="https://api.coretransapi.com"
 

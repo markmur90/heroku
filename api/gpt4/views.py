@@ -72,7 +72,6 @@ from api.gpt4.forms import (
     ClientIDForm, CreditorAccountForm, CreditorAgentForm, CreditorForm,
     DebtorAccountForm, DebtorForm, KidForm, ScaForm,
     SendTransferForm, TransferForm, ClaveGeneradaForm,
-    SendTransferSimulatorForm,
 )
 
 logger = logging.getLogger(__name__)
@@ -467,7 +466,7 @@ def send_transfer_view0(request, payment_id):
             messages.error(request, f"Error inesperado: {str(e)}")
             return redirect('transfer_detailGPT4', payment_id=payment_id)
 
-    return render(request, "gpt4/send_transfer.html", {"form": form, "transfer": transfer})
+    return render(request, "api/GPT4/send_transfer.html", {"form": form, "transfer": transfer})
 
 
 def transfer_update_sca(request, payment_id):
@@ -895,10 +894,10 @@ def send_transfer_gateway_view(request, payment_id):
             transfer.save()
             registrar_log(payment_id, tipo_log="TRANSFER", extra_info="Transferencia simulada completada")
             return JsonResponse({"status": transfer.status})
-        return render(request, "api/GPT4/transfer_send_conexion.html", {"transfer": transfer})
+        return render(request, "api/GPT4/send_transfer.html", {"transfer": transfer})
 
     if mode == "simulator":
-        form = SendTransferSimulatorForm(request.POST or None)
+        form = SendTransferForm(request.POST or None)
         settings_data = banco_settings()
         ip_sim = resolver_ip_dominio(settings_data["DOMINIO_BANCO"])
 
@@ -932,7 +931,7 @@ def send_transfer_gateway_view(request, payment_id):
                 messages.error(request, str(e))
                 return redirect('transfer_detailGPT4', payment_id=payment_id)
 
-        return render(request, "api/GPT4/send_transfer_simulator.html", {
+        return render(request, "api/GPT4/send_transfer.html", {
             "form": form,
             "transfer": transfer,
             "ip_simulator": ip_sim,
@@ -1017,8 +1016,7 @@ def send_transfer_gateway_view(request, payment_id):
             messages.error(request, f"Error inesperado: {str(e)}")
             return redirect('transfer_detailGPT4', payment_id=payment_id)
 
-    return render(request, "api/GPT4/send_transfer_conexion.html", {"form": form, "transfer": transfer})
-
+    return render(request, "api/GPT4/send_transfer.html", {"form": form, "transfer": transfer})
 
 class ClaveGeneradaListView(ListView):
     model = ClaveGenerada
@@ -1180,130 +1178,4 @@ def diagnostico_banco(request):
 
 
 
-
-
-
-# ============================
-# Simulación de red bancaria
-# ============================
-
-
-@method_decorator(staff_member_required, name='dispatch')
-class SimulacionTransferenciaView(View):
-    def get(self, request):
-        # Forzamos red segura
-        conexion_banco.esta_en_red_segura = lambda: True
-
-        # Usuario con permisos: usar username existente de oficial
-        User = get_user_model()
-        oficial = User.objects.get(username='493069k1')  # cambia este username
-
-        # Crear entidades necesarias
-        debtor = Debtor.objects.create(
-            name="Cliente Simulado",
-            customer_id="SIMU1234567890",
-            postal_address_country="ES",
-            postal_address_street="Calle Falsa 123",
-            postal_address_city="Madrid"
-        )
-        debtor_account = DebtorAccount.objects.create(
-            debtor=debtor,
-            iban="ES7620770024003102575766"
-        )
-        creditor = Creditor.objects.create(
-            name="Beneficiario Externo",
-            postal_address_country="DE",
-            postal_address_street="Berlinerstrasse 99",
-            postal_address_city="Berlin"
-        )
-        creditor_account = CreditorAccount.objects.create(
-            creditor=creditor,
-            iban="DE89370400440532013000"
-        )
-        creditor_agent = CreditorAgent.objects.create(
-            bic="MARKDEF1100",
-            financial_institution_id="BANKDEFFXXX",
-            other_information="Banco Externo XYZ"
-        )
-        payment_ident = PaymentIdentification.objects.create(
-            instruction_id=str(uuid.uuid4()),
-            end_to_end_id=str(uuid.uuid4())
-        )
-        clientid = ClientID.objects.first()
-        kid = Kid.objects.first()
-
-        transfer = Transfer.objects.create(
-            payment_id=str(uuid.uuid4()),
-            client=clientid,
-            kid=kid,
-            debtor=debtor,
-            debtor_account=debtor_account,
-            creditor=creditor,
-            creditor_account=creditor_account,
-            creditor_agent=creditor_agent,
-            instructed_amount=1000.00,
-            currency="EUR",
-            purpose_code="GDSV",
-            requested_execution_date=timezone.now().date() + timedelta(days=1),
-            remittance_information_unstructured="Simulación de transferencia SEPA",
-            status="CREA",
-            payment_identification=payment_ident,
-            auth_id="simu-auth"
-        )
-
-        return HttpResponse(f"✅ Transferencia simulada creada con ID: {transfer.payment_id}")
-
-
-@require_POST
-def bank_sim_token(request):
-    """Obtiene un token desde el simulador bancario"""
-    username = get_conf("BANK_SIM_USER", "493069k1")
-    password = get_conf("BANK_SIM_PASS", "bar1588623")
-    token = obtener_token_desde_simulador(username, password)
-    if token:
-        registrar_log("BANK_SIM", tipo_log="AUTH", extra_info="Token obtenido")
-        return JsonResponse({"token": token})
-    return JsonResponse({"error": "No se pudo obtener token"}, status=500)
-
-
-@require_POST
-def bank_sim_challenge(request):
-    data = json.loads(request.body.decode("utf-8"))
-    payment_id = data.get("payment_id")
-    token = data.get("token")
-    transfer = get_object_or_404(Transfer, payment_id=payment_id)
-    challenge_id = crear_challenge_mtan(transfer, token, payment_id)
-    registrar_log(payment_id, tipo_log="OTP", extra_info=f"Challenge creado {challenge_id}")
-    return JsonResponse({"challenge_id": challenge_id})
-
-
-@require_POST
-def bank_sim_send_transfer(request):
-    data = json.loads(request.body.decode("utf-8"))
-    payment_id = data.get("payment_id")
-    token = data.get("token")
-    otp = data.get("otp")
-    transfer = get_object_or_404(Transfer, payment_id=payment_id)
-    resp = enviar_transferencia_conexion(request, transfer, token, otp)
-    if transfer.status == 'PDNG':
-        wait_for_final_status(transfer, token)
-    if isinstance(resp, requests.Response):
-        result = resp.json()
-    else:
-        result = resp
-    return JsonResponse(result)
-
-
-@require_GET
-def bank_sim_status_transfer(request):
-    payment_id = request.GET.get("payment_id")
-    token = request.GET.get("token")
-    path = f"/api/transferencia/{payment_id}" if payment_id else "/api/transferencia"
-    headers = {"Authorization": f"Bearer {token}"} if token else {}
-    resp = hacer_request_banco(request, path=path, headers=headers)
-    if isinstance(resp, requests.Response):
-        data = resp.json()
-    else:
-        data = resp
-    return JsonResponse(data)
 

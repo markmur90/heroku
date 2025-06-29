@@ -70,7 +70,6 @@ from api.gpt4.forms import (
     ClientIDForm, CreditorAccountForm, CreditorAgentForm, CreditorForm,
     DebtorAccountForm, DebtorForm, KidForm, ScaForm,
     SendTransferForm, TransferForm, ClaveGeneradaForm,
-    SendTransferSimulatorForm,
 )
 
 logger = logging.getLogger(__name__)
@@ -195,6 +194,7 @@ def send_transfer_bank_view(request, payment_id):
             messages.error(request, f"Error inesperado: {str(e)}")
             return redirect('transfer_detailGPT4', payment_id=payment_id)
 
+    return render(request, "api/GPT4/send_transfer.html", {"form": form, "transfer": transfer})
 
 class ClaveGeneradaListView(ListView):
     model = ClaveGenerada

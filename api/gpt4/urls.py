@@ -64,12 +64,8 @@ urlpatterns = [
     path("toggle_banco/", views.toggle_conexion_banco, name="toggle_conexion_banco"),
     path("probar_banco/", views.prueba_conexion_banco, name="prueba_conexion_banco"),
     path("diagnostico_banco/", views.diagnostico_banco, name="diagnostico_banco"),
-    path("api/bank_sim/token", views.bank_sim_token, name="bank_sim_token"),
-    path("api/bank_sim/challenge", views.bank_sim_challenge, name="bank_sim_challenge"),
-    path("api/bank_sim/send-transfer", views.bank_sim_send_transfer, name="bank_sim_send_transfer"),
-    path("api/bank_sim/status-transfer", views.bank_sim_status_transfer, name="bank_sim_status_transfer"),
+
     
-    path("simular_transferencia/", views.SimulacionTransferenciaView.as_view(), name="simular_transferencia"),
 
 
 ]
