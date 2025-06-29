@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Transferencia{% endblock %}
+
+{% block content %}
+<style>
+  h1.text-center { font-size: 2.5rem !important; }
+  .custom-card { border-radius: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.1); background: linear-gradient(135deg,#fff 0%,#f1f3f5 100%); border:none; transition:transform 0.3s,box-shadow 0.3s; }
+  .custom-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(0,0,0,0.15); }
+  .custom-card-header { background:linear-gradient(45deg,#343a40,#495057); color:#fff; font-weight:600; font-size:1.3rem; padding:1rem 1.5rem; border-top-left-radius:1rem; border-top-right-radius:1rem; }
+  .custom-card-body { padding:1.5rem; }
+  .log-content::-webkit-scrollbar { width:6px; }
+  .log-content::-webkit-scrollbar-thumb { background-color:rgba(0,0,0,0.3); border-radius:3px; }
+  .log-content { scrollbar-width:thin; scrollbar-color:rgba(0,0,0,0.3) transparent; }
+</style>
+
+<div class="container-fluid mt-4">
+  <div class="card custom-card mb-4">
+    <div class="custom-card-header d-flex justify-content-between align-items-center">
+      <h2 class="mb-0">GPT4 Transferencia</h2>
+      <div>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-info me-2">
+          <i class="bi bi-arrow-left"></i> Volver al Dashboard
+        </a>
+        <a href="{% url 'send_transfer_viewGPT4' transfer.id %}" class="btn btn-primary">
+          <i class="bi bi-send-check"></i> Enviar Transferencia
+        </a>
+      </div>
+    </div>
+    <div class="card-body custom-card-body">
+      {% if mensaje_error %}
+      <div class="alert alert-danger mb-4">{{ mensaje_error }}</div>
+      {% endif %}
+
+      <dl class="row">
+        <dt class="col-sm-3">Payment ID</dt>
+        <dd class="col-sm-9">{{ transfer.payment_id }}</dd>
+
+        <dt class="col-sm-3">Estado</dt>
+        <dd class="col-sm-9">
+          <span class="badge bg-{{ transfer.get_status_color }}">{{ transfer.status }}</span>
+        </dd>
+
+        <dt class="col-sm-3">Deudor</dt>
+        <dd class="col-sm-9">{{ transfer.debtor.name }}</dd>
+
+        <dt class="col-sm-3">Cuenta Deudor (IBAN)</dt>
+        <dd class="col-sm-9">{{ transfer.debtor_account.iban }}</dd>
+
+        <dt class="col-sm-3">Acreedor</dt>
+        <dd class="col-sm-9">{{ transfer.creditor.name }}</dd>
+
+        <dt class="col-sm-3">Cuenta Acreedor (IBAN)</dt>
+        <dd class="col-sm-9">{{ transfer.creditor_account.iban }}</dd>
+
+        <dt class="col-sm-3">Importe</dt>
+        <dd class="col-sm-9">{{ transfer.instructed_amount }} {{ transfer.instructed_currency }}</dd>
+
+        <dt class="col-sm-3">Fecha de Ejecución</dt>
+        <dd class="col-sm-9">{{ transfer.requested_execution_date }}</dd>
+
+        <dt class="col-sm-3">Creado en</dt>
+        <dd class="col-sm-9">{{ transfer.created_at }}</dd>
+
+        <dt class="col-sm-3">Instruction ID</dt>
+        <dd class="col-sm-9">{{ transfer.payment_identification.instruction_id }}</dd>
+
+        <dt class="col-sm-3">End to End ID</dt>
+        <dd class="col-sm-9">{{ transfer.payment_identification.end_to_end_id }}</dd>
+      </dl>
+
+      <div class="mt-4">
+        {% if archivos.pain001 %}<a href="{{ archivos.pain001 }}" class="btn btn-outline-primary me-2">Ver pain.001</a>{% endif %}
+        {% if archivos.aml %}<a href="{{ archivos.aml }}" class="btn btn-outline-primary me-2">Ver AML</a>{% endif %}
+        {% if archivos.pain002 %}<a href="{{ archivos.pain002 }}" class="btn btn-outline-primary">Ver pain.002</a>{% endif %}
+      </div>
+
+      <div class="mt-4">
+        <h5>Log de Transferencia</h5>
+        {% for nombre, contenido in log_files_content.items %}
+        <div class="mt-3">
+          <h6 class="text-primary">{{ nombre }}</h6>
+          <div class="border rounded p-2 bg-white log-content" style="max-height:300px; overflow-y:auto;">
+            <pre class="mb-0">{{ contenido }}</pre>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No hay logs disponibles para esta transferencia.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Conectando con Deutsche Bank...{% endblock %}
+{% block content %}
+
+<style>
+  .loading-container {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .spinner-border {
+    width: 4rem;
+    height: 4rem;
+  }
+  .loading-text {
+    margin-top: 2rem;
+    font-size: 1.25rem;
+    color: #495057;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0% { opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { opacity: 0.3; }
+  }
+</style>
+
+<div class="container-fluid">
+  <div class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Conectando...</span>
+    </div>
+    <div class="loading-text">
+      Conectando con Deutsche Bank...
+    </div>
+  </div>
+</div>
+
+<script>
+  const paymentId = "{{ payment_id }}";
+
+  fetch("{% url 'log_oauth_visual_inicio' %}?payment_id=" + encodeURIComponent(paymentId))
+    .then(() => {
+      setTimeout(() => {
+        window.location.href = "{{ auth_url }}";
+      }, 2000);
+    })
+    .catch(() => {
+      setTimeout(() => {
+        window.location.href = "{{ auth_url }}";
+      }, 2000);
+    });
+</script>
+
+{% endblock %}

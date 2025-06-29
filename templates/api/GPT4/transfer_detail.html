@@ -1,0 +1,166 @@
+{% extends 'base.html' %} 
+{% block title %}Detalle de Transferencia{% endblock%} 
+{% block content %}
+<style>
+  h1.text-center {
+    font-size: 2.5rem !important;
+  }
+  .custom-card {
+    border-radius: 1rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #fff 0%, #f1f3f5 100%);
+    border: none;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .custom-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  }
+  .custom-card-header {
+    background: linear-gradient(45deg, #343a40, #495057);
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.3rem;
+    padding: 1rem 1.5rem;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+  }
+  .custom-card-body {
+    padding: 1.5rem;
+  }
+  .log-content::-webkit-scrollbar {
+    width: 6px;
+  }
+  .log-content::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+  }
+  .log-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 2px;
+  }
+</style>
+
+<div class="container-fluid mt-4">
+  <div class="card custom-card mb-4">
+    <div class="custom-card-header d-flex justify-content-between align-items-center">
+      <h2 class="mb-0">GPT4 Transferencia</h2>
+
+      <div class="button-toolbar d-flex flex-wrap justify-content-end gap-2">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-info btn-sm">
+          <i class="bi bi-arrow-left"></i> Dashboard
+        </a>
+        <a href="{% url 'descargar_pdfGPT4' transfer.payment_id %}" class="btn btn-outline-info btn-sm">
+          <i class="bi bi-file-earmark-pdf"></i> PDF
+        </a>
+        <a href="{% url 'edit_transferGPT4' transfer.payment_id %}" class="btn btn-outline-info btn-sm" title="Editar Transferencia">
+          <i class="bi bi-pencil-square"></i> Editar
+        </a>
+        {% if not transfer.auth_id %}
+        <a href="{% url 'oauth2_authorize' %}?payment_id={{ transfer.payment_id }}" class="btn btn-outline-info btn-sm">
+          <i class="bi bi-shield-lock"></i> OAuth2
+        </a>
+        {% endif %}
+        {% if request.session.usar_conexion_banco %}
+          <a href="{% url 'send_transfer_bank_viewGPT4' transfer.payment_id %}" class="btn btn-outline-info btn-sm">
+            <i class="bi bi-send-check"></i>
+            {% if allow_fake_bank %}Enviar Simulador{% else %}Enviar Banco{% endif %}
+          </a>
+        {% else %}
+          <a href="{% url 'send_transfer_viewGPT4' transfer.payment_id %}" class="btn btn-outline-info btn-sm">
+            <i class="bi bi-send-check"></i> Enviar
+          </a>
+        {% endif %}
+        <a href="{% url 'transfer_detailGPT4' transfer.payment_id %}" class="btn btn-outline-info btn-sm" title="Refrescar estado">
+          <i class="bi bi-arrow-clockwise"></i> Refrescar
+        </a>
+      </div>
+    </div>
+
+    <div class="card-body custom-card-body">
+      {% if mensaje_error %}
+      <div class="alert alert-danger mb-4">{{ mensaje_error }}</div>
+      {% endif %}
+
+      <dl class="row">
+        {% if transfer.auth_id %}
+        <dt class="col-sm-2">Auth ID</dt>
+        <dd class="col-sm-4">{{ transfer.auth_id }}</dd>
+        {% endif %}
+        <dt class="col-sm-2">Payment ID</dt>
+        <dd class="col-sm-4">{{ transfer.payment_id }}</dd>
+        <dt class="col-sm-2">Estado</dt>
+        <dd class="col-sm-4">
+          <span class="badge bg-{{ transfer.get_status_color }}"
+            >{{ transfer.status }}</span
+          >
+        </dd>
+        <dt class="col-sm-2">Deudor</dt>
+        <dd class="col-sm-4">{{ transfer.debtor.name }}</dd>
+        <dt class="col-sm-2">Deudor (IBAN)</dt>
+        <dd class="col-sm-4">{{ transfer.debtor_account.iban }}</dd>
+        <dt class="col-sm-2">Acreedor</dt>
+        <dd class="col-sm-4">{{ transfer.creditor.name }}</dd>
+        <dt class="col-sm-2">Acreedor (IBAN)</dt>
+        <dd class="col-sm-4">{{ transfer.creditor_account.iban }}</dd>
+        <dt class="col-sm-2">Creado en</dt>
+        <dd class="col-sm-4">{{ transfer.created_at|date:"d/m/Y H:i" }}</dd>
+        <dt class="col-sm-2">Fecha de Ejecución</dt>
+        <dd class="col-sm-4">
+          {{ transfer.requested_execution_date|date:"d/m/Y" }}
+        </dd>
+        <dt class="col-sm-2">Importe</dt>
+        <dd class="col-sm-4">
+          {{ transfer.instructed_amount|floatformat:2 }} {{ transfer.currency }}
+        </dd>
+        <dt class="col-sm-2">Referencia</dt>
+        <dd class="col-sm-4">
+          {{ transfer.remittance_information_unstructured }}
+        </dd>
+        <dt class="col-sm-2">Instruction ID</dt>
+        <dd class="col-sm-4">
+          {{ transfer.payment_identification.instruction_id }}
+        </dd>
+        <dt class="col-sm-2">End to End ID</dt>
+        <dd class="col-sm-4">
+          {{ transfer.payment_identification.end_to_end_id }}
+        </dd>
+      </dl>
+
+      <div class="mt-4 p-3 bg-light border rounded">
+        <h5>Registro de Actividad (por Payment ID)</h5>
+        <ul class="nav nav-tabs" id="logTabs" role="tablist">
+          {% for tipo, logs in logs_por_tipo.items %}
+          <li class="nav-item" role="presentation">
+            <button class="nav-link {% if forloop.first %}active{% endif %}" id="{{ tipo }}-tab" data-bs-toggle="tab" data-bs-target="#{{ tipo }}-logs" type="button" role="tab">
+              {{ tipo|capfirst }}
+            </button>
+          </li>
+          {% endfor %}
+        </ul>
+        <div class="tab-content p-3 bg-white border border-top-0 rounded-bottom">
+          {% for tipo, logs in logs_por_tipo.items %}
+          <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{ tipo }}-logs" role="tabpanel">
+            {% for log in logs %}
+            <div class="mb-3 border-bottom pb-2">
+              <small class="text-muted">{{ log.created_at|date:"d/m/Y H:i:s" }}</small>
+              <div class="log-content {% if tipo == 'errores' %}text-danger{% endif %}">
+                {{ log.contenido }}
+              </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">No hay logs registrados para este tipo.</p>
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
