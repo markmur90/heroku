@@ -198,7 +198,7 @@ from django.conf import settings
 
 
 # Inicialización de configuración y conector
-config = ConfigLoader(prefix='BANK_')
+config = ConfigLoader(prefix='')
 logger = logging.getLogger('bank_connector')
 connector = BankConnector(config=config, logger=logger)
 
