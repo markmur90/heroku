@@ -1,0 +1,64 @@
+
+================================================================================
+Fecha y hora: 2025-06-27 02:46:22
+================================================================================
+=== Info ===
+Transferencia creada
+
+
+================================================================================
+Fecha y hora: 2025-06-27 02:46:22
+================================================================================
+=== Info ===
+XML pain.001 generado en schemas/transferencias/12499830-8aed-476c-a268-6a6d2f029840/pain001_12499830-8aed-476c-a268-6a6d2f029840.xml
+
+
+================================================================================
+Fecha y hora: 2025-06-27 02:46:22
+================================================================================
+=== Info ===
+Archivo AML generado en schemas/transferencias/12499830-8aed-476c-a268-6a6d2f029840/aml_12499830-8aed-476c-a268-6a6d2f029840.xml
+
+
+================================================================================
+Fecha y hora: 2025-06-27 02:48:49
+================================================================================
+=== Info ===
+OAuth: inicio_autorizacion - exito
+
+=== Body de la petición ===
+{
+    "state": "7249a9f7f4dc4aeab076bd2efcba02a4",
+    "auth_url": "http://80.78.30.242:9181/oidc/authorize?response_type=code&client_id=7c1e2c53-8cc3-4ea0-bdd6-b3423e76adc7&redirect_uri=https://api.coretransapi.com/oauth2/callback/&scope=sepa_credit_transfers&state=7249a9f7f4dc4aeab076bd2efcba02a4&code_challenge_method=S256&code_challenge=d2I-tHszTSKzjxCV-Ud-P2mkmo0yiebmgm-ILAK_g-M",
+    "code_challenge": "d2I-tHszTSKzjxCV-Ud-P2mkmo0yiebmgm-ILAK_g-M",
+    "payment_id": "12499830-8aed-476c-a268-6a6d2f029840"
+}
+
+
+================================================================================
+Fecha y hora: 2025-06-27 02:48:50
+================================================================================
+=== Info ===
+Inicio del flujo OAuth2 desde transferencia
+
+=== Body de la petición ===
+{
+    "verifier": "IdeYFCvpxRAvZ2WEK9q-MmsnrTAQRykymU5VXzpx9r-0JAXnbTRdEWuPvGEbBwAcqsOWxaqPRUqvW9keHapGWw",
+    "challenge": "d2I-tHszTSKzjxCV-Ud-P2mkmo0yiebmgm-ILAK_g-M",
+    "state": "7249a9f7f4dc4aeab076bd2efcba02a4"
+}
+
+
+================================================================================
+Fecha y hora: 2025-06-27 02:50:10
+================================================================================
+=== Info ===
+OAuth: inicio_autorizacion - error
+
+=== Body de la petición ===
+{
+    "error": "Falta payment_id"
+}
+
+=== Error ===
+OAuth2 requiere un payment_id

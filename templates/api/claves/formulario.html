@@ -1,0 +1,27 @@
+{# templates/claves/formulario.html #}
+{% extends 'base.html' %}
+{% block title %}{{ modo|title }} Clave Generada{% endblock %}
+{% block content %}
+<style>
+  .custom-card { border-radius: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.1); background: linear-gradient(135deg, #fff 0%, #f1f3f5 100%); border: none; }
+  .custom-card-header { background: linear-gradient(45deg, #4b555e, #8b99a7); color: #fff; font-weight: 600; font-size: 1.3rem; padding: 1rem 1.5rem; border-top-left-radius: 1rem; border-top-right-radius: 1rem; }
+  .custom-card-body { padding: 1.5rem; }
+</style>
+
+<div class="container mt-5">
+  <div class="card custom-card">
+    <div class="custom-card-header">
+      {{ modo|title }} Clave Generada
+    </div>
+    <div class="custom-card-body">
+      <form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}
+        {{ form.as_p }}
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <a href="{% url 'lista_claves' %}" class="btn btn-secondary">⬅ Volver</a>
+          <button type="submit" class="btn btn-success">💾 Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+
+================================================================================
+Fecha y hora: 2025-06-27 07:42:43
+================================================================================
+=== Info ===
+Transferencia creada
+
+
+================================================================================
+Fecha y hora: 2025-06-27 07:42:44
+================================================================================
+=== Info ===
+XML pain.001 generado en schemas/transferencias/96cf8f03-4d22-49bb-9dac-7c333fd93c3a/pain001_96cf8f03-4d22-49bb-9dac-7c333fd93c3a.xml
+
+
+================================================================================
+Fecha y hora: 2025-06-27 07:42:44
+================================================================================
+=== Info ===
+Archivo AML generado en schemas/transferencias/96cf8f03-4d22-49bb-9dac-7c333fd93c3a/aml_96cf8f03-4d22-49bb-9dac-7c333fd93c3a.xml
+
+
+================================================================================
+Fecha y hora: 2025-06-27 07:44:14
+================================================================================
+=== Info ===
+OAuth: inicio_autorizacion - exito
+
+=== Body de la petición ===
+{
+    "state": "100de1ec7a1f413b9ab94ffe5f5d9401",
+    "auth_url": "http://80.78.30.242:9181/oidc/authorize?response_type=code&client_id=7c1e2c53-8cc3-4ea0-bdd6-b3423e76adc7&redirect_uri=https://api.coretransapi.com/oauth2/callback/&scope=sepa_credit_transfers&state=100de1ec7a1f413b9ab94ffe5f5d9401&code_challenge_method=S256&code_challenge=ZKkqs6f7kjSR8ytJs7sYc5wSi-nwo5nmm5YS-bIPLiE",
+    "code_challenge": "ZKkqs6f7kjSR8ytJs7sYc5wSi-nwo5nmm5YS-bIPLiE",
+    "payment_id": "96cf8f03-4d22-49bb-9dac-7c333fd93c3a"
+}
+
+
+================================================================================
+Fecha y hora: 2025-06-27 07:44:14
+================================================================================
+=== Info ===
+Inicio del flujo OAuth2 desde transferencia
+
+=== Body de la petición ===
+{
+    "verifier": "3wVc1nVB1_H88UTc7FW7bnEBtl8S5srIUu4Es89-eQ6sfs072SWnI2PsMgNX2reT5-Ji5M0rWdXL5ja0Mk2UwA",
+    "challenge": "ZKkqs6f7kjSR8ytJs7sYc5wSi-nwo5nmm5YS-bIPLiE",
+    "state": "100de1ec7a1f413b9ab94ffe5f5d9401"
+}
+

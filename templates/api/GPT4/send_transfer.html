@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  h1.text-center { font-size: 2.5rem !important; }
+  .custom-card {
+    border-radius: 1rem;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #fff 0%, #f1f3f5 100%);
+    border: none; transition: transform .3s, box-shadow .3s;
+  }
+  .custom-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+  }
+  .custom-card-header {
+    background: linear-gradient(45deg, #4b555e, #8b99a7);
+    color: #fff; font-weight: 600; font-size: 1.3rem;
+    padding: 1rem 1.5rem;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+  }
+  .custom-card-body { padding: 1.5rem; }
+</style>
+
+<div class="container-fluid">
+  <h1 class="text-center mb-4 display-6 fw-bold">Enviar Transferencia al Banco</h1>
+  <div class="card custom-card mb-4">
+    <div class="custom-card-header d-flex justify-content-between align-items-center">
+      <h2 class="mb-0">ID: {{ transfer.payment_id }}</h2>
+    </div>
+    <div class="card-body custom-card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <!-- Muestra el challenge_id (si aplica) -->
+        {% if challenge_id %}
+          <div class="alert alert-info">
+            <strong>Challenge ID:</strong> {{ challenge_id }}
+          </div>
+        {% endif %}
+
+        <!-- OTP de la transacción -->
+        <div class="mb-3">
+          <label for="id_manual_otp" class="form-label">Código OTP/TAN</label>
+          {{ form.manual_otp }}
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <a href="{% url 'transfer_detailGPT4' transfer.payment_id %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Cancelar
+          </a>
+          <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+            <i class="bi bi-house-door"></i> Dashboard
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-send-check"></i> Confirmar y Enviar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
