@@ -14,7 +14,6 @@ from django.shortcuts import get_object_or_404
 import requests
 from sshtunnel import SSHTunnelForwarder
 
-from api.gpt4.conexion.conexion_banco import consultar_estado, enviar_transferencia, obtener_token
 from api.gpt4.models import Transfer
 from api.gpt4.utils import crear_challenge_mtan, registrar_log
 
@@ -70,6 +69,7 @@ def ssh_request(
 @require_POST
 def fake_token(request):
     """Endpoint de simulación: retorna un token falso."""
+    from api.gpt4.conexion.conexion_banco import obtener_token
     token = obtener_token()
     registrar_log("BANK_SIM", tipo_log="AUTH", extra_info="Token obtenido")
     return JsonResponse({"token": token})
@@ -81,7 +81,7 @@ def fake_challenge_id(request):
     data = json.loads(request.body.decode("utf-8"))
     payment_id = data.get("payment_id")
     transfer = get_object_or_404(Transfer, payment_id=payment_id)
-    challenge_id = crear_challenge_mtan(transfer, None, payment_id) # type: ignore
+    challenge_id = crear_challenge_mtan(transfer, None, payment_id)  # type: ignore
     registrar_log(payment_id, tipo_log="OTP", extra_info=f"Challenge creado {challenge_id}")
     return JsonResponse({"challenge_id": challenge_id})
 
@@ -89,7 +89,7 @@ def fake_challenge_id(request):
 @require_POST
 def fake_transfer(request):
     """Endpoint de simulación: procesa una transferencia fake."""
-    data = json.loads(request.body.decode("utf-8"))
+    from api.gpt4.conexion.conexion_banco import enviar_transferencia
     payment_id = data.get("payment_id")
     token = data.get("token")
     otp = data.get("otp")
@@ -101,6 +101,6 @@ def fake_transfer(request):
 def fake_status(request):
     """Endpoint de simulación: consulta estado fake de transferencia."""
     payment_id = request.GET.get("payment_id")
-    token = request.GET.get("token")
+    from api.gpt4.conexion.conexion_banco import consultar_estado
     status = consultar_estado(token, payment_id)
     return JsonResponse(status)
