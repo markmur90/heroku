@@ -7,7 +7,6 @@ from api.gpt4.conexion.ssh_utils import ssh_request
 import dns.resolver
 import requests
 
-from api.gpt4.conexion.conexion_ssh import ssh_request
 import socket
 import json
 import time
