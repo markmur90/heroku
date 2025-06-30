@@ -90,6 +90,7 @@ def fake_challenge_id(request):
 def fake_transfer(request):
     """Endpoint de simulación: procesa una transferencia fake."""
     from api.gpt4.conexion.conexion_banco import enviar_transferencia
+    data = json.loads(request.body.decode("utf-8"))
     payment_id = data.get("payment_id")
     token = data.get("token")
     otp = data.get("otp")
@@ -100,7 +101,8 @@ def fake_transfer(request):
 @require_GET
 def fake_status(request):
     """Endpoint de simulación: consulta estado fake de transferencia."""
-    payment_id = request.GET.get("payment_id")
     from api.gpt4.conexion.conexion_banco import consultar_estado
+    payment_id = request.GET.get("payment_id")
+    token = request.GET.get("token")
     status = consultar_estado(token, payment_id)
     return JsonResponse(status)

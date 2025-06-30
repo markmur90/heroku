@@ -60,10 +60,12 @@ from api.gpt4.utils import (
     resolver_challenge_pushtan, send_transfer, update_sca_request,
     wait_for_final_status
 )
-from api.gpt4.conexion.conexion_banco import (
+from api.gpt4_conexion.conexion_banco_refactor import (
     hacer_request_banco,
     enviar_transferencia_conexion,
     obtener_token_desde_simulador,
+)
+from api.gpt4.conexion.conexion_banco import (
     resolver_ip_dominio,
     get_settings as banco_settings,
 )
