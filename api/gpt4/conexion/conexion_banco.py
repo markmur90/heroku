@@ -1,18 +1,14 @@
 from functools import lru_cache
 from urllib.parse import urlparse
-import requests
+import json
+import socket
+import time
 from typing import Any, Dict, Optional
 
-from api.gpt4.conexion.ssh_utils import ssh_request
 import dns.resolver
 import requests
 
-from api.gpt4.conexion.conexion_ssh import ssh_request
-import socket
-import json
-import time
-
-from functools import lru_cache
+from api.gpt4.conexion.ssh_utils import ssh_request
 
 from api.gpt4.utils import (
     registrar_log,

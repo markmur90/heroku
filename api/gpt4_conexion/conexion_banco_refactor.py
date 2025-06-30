@@ -302,8 +302,8 @@ def hacer_request_banco(
     # Si modo oficial, se autentica
     if usar == "oficial":
         token = obtener_token_desde_simulador(
-            settings.BANK_SIM_USER,
-            settings.BANK_SIM_PASS
+            settings.BANK_USER,
+            settings.BANK_PASS
         )
         if token:
             headers["Authorization"] = f"Bearer {token}"
@@ -320,8 +320,8 @@ def hacer_request_banco(
             return resultado
 
     # Modo local mock
-    dns = config.get('DNS_BANCO', default=settings.BANK_DNS)
-    puerto = int(config.get('MOCK_PORT', default=str(settings.BANK_MOCK_PORT)))
+    dns = config.get('DNS_BANCO', default=settings.DNS_DOMINIO)
+    puerto = int(config.get('MOCK_PORT', default=str(settings.MOCK_PORT)))
     url = f"https://{dns}:{puerto}{path}"
     try:
         resp = connector.http_client.session.request(

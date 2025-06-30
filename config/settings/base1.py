@@ -173,7 +173,7 @@ OAUTH2_PROVIDER = {'ACCESS_TOKEN_EXPIRE_SECONDS': 3600, 'OIDC_ENABLED': True}
 from api.configuraciones_api.loader import get_settings
 
 
-BANK_SIM_BASE_URL="http://80.78.30.242:9181"
+BASE_URL="http://80.78.30.242:9181"
 TOKEN_PATH="/oidc/token"
 AUTH_PATH="/auth/challenges"
 SEND_PATH="/payments"
