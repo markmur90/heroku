@@ -173,6 +173,13 @@ OAUTH2_PROVIDER = {'ACCESS_TOKEN_EXPIRE_SECONDS': 3600, 'OIDC_ENABLED': True}
 from api.configuraciones_api.loader import get_settings
 
 
+BANK_SIM_BASE_URL="http://80.78.30.242:9181"
+TOKEN_PATH="/oidc/token"
+AUTH_PATH="/auth/challenges"
+SEND_PATH="/payments"
+STATUS_PATH="/payments/status"
+TIMEOUT_REQUEST=10
+ALLOW_FAKE_BANK=True # Para pruebas reales, cambiar ALLOW_FAKE_BANK=False
 
 # URLs de la API externa
 TOKEN_URL="http://80.78.30.242:9181/oidc/token"

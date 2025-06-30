@@ -1637,7 +1637,7 @@ def generar_client_assertion(registro=None):
         )
 
         registrar_log(
-            registro=registro,
+            registro=str(registro) if registro is not None else "UNKNOWN_REGISTRO",
             tipo_log='AUTH',
             extra_info=f"✅ JWT generado correctamente para client_id={client_id}, kid={kid}"
         )
@@ -1645,11 +1645,10 @@ def generar_client_assertion(registro=None):
 
     except Exception as e:
         registrar_log(
-            registro=registro,
+            registro=str(registro) if registro is not None else "UNKNOWN_REGISTRO",
             tipo_log='ERROR',
             error=str(e),
             extra_info="❌ Error generando client_assertion"
         )
         raise
-
 

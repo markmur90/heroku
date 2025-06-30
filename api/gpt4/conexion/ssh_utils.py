@@ -71,7 +71,7 @@ def ssh_request(
 def fake_token(request):
     """Endpoint de simulación: retorna un token falso."""
     token = obtener_token()
-    registrar_log("FAKE", tipo_log="AUTH", extra_info="Token obtenido")
+    registrar_log("BANK_SIM", tipo_log="AUTH", extra_info="Token obtenido")
     return JsonResponse({"token": token})
 
 

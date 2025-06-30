@@ -1,35 +1,28 @@
+<!-- create_transfer.html (sin cambios significativos) -->
 {% extends 'base.html' %}
 
 {% block content %}
 <style>
-  h1.text-center { font-size: 2.5rem !important; }
-  .custom-card { border-radius: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.1); background: linear-gradient(135deg,#ffffff 0%,#f1f3f5 100%); border: none; transition: transform .3s ease, box-shadow .3s ease; }
-  .custom-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
-  .custom-card-header { background: linear-gradient(45deg,#343a40,#495057); color: #fff; font-weight: 600; font-size: 1.3rem; padding: 1rem 1.5rem; border-top-left-radius: 1rem; border-top-right-radius: 1rem; }
-  .custom-card-body { padding: 1.5rem; }
+  /* Estilos personalizados ya definidos */
 </style>
 
 <div class="container-fluid">
-  <h1 class="text-center mb-4 display-6 fw-bold">GPT4 Crear Nueva Transferencia SEPA</h1>
-
+  <h1 class="text-center mb-4 display-6 fw-bold">Crear Nueva Transferencia SEPA</h1>
   <form method="post" class="needs-validation" novalidate>
     {% csrf_token %}
 
-
-
-
-
+    <!-- Datos del Deudor -->
     <div class="card custom-card mb-4">
       <div class="custom-card-header">Datos del Deudor</div>
       <div class="card-body custom-card-body">
         <div class="row g-3">
           <div class="col-md-6">
-            <label for="id_debtor" class="form-label">Deudor</label>
+            {{ form.debtor.label_tag }}
             {{ form.debtor }}
             <a href="{% url 'create_debtorGPT4' %}" class="btn btn-link">Crear nuevo deudor</a>
           </div>
           <div class="col-md-6">
-            <label for="id_debtor_account" class="form-label">Cuenta del Deudor</label>
+            {{ form.debtor_account.label_tag }}
             {{ form.debtor_account }}
             <a href="{% url 'create_debtor_accountGPT4' %}" class="btn btn-link">Crear nueva cuenta</a>
           </div>
@@ -37,22 +30,23 @@
       </div>
     </div>
 
+    <!-- Datos del Acreedor -->
     <div class="card custom-card mb-4">
       <div class="custom-card-header">Datos del Acreedor</div>
       <div class="card-body custom-card-body">
         <div class="row g-3">
           <div class="col-md-4">
-            <label for="id_creditor" class="form-label">Acreedor</label>
+            {{ form.creditor.label_tag }}
             {{ form.creditor }}
             <a href="{% url 'create_creditorGPT4' %}" class="btn btn-link">Crear nuevo acreedor</a>
           </div>
           <div class="col-md-4">
-            <label for="id_creditor_account" class="form-label">Cuenta del Acreedor</label>
+            {{ form.creditor_account.label_tag }}
             {{ form.creditor_account }}
             <a href="{% url 'create_creditor_accountGPT4' %}" class="btn btn-link">Crear nueva cuenta</a>
           </div>
           <div class="col-md-4">
-            <label for="id_creditor_agent" class="form-label">Agente del Acreedor</label>
+            {{ form.creditor_agent.label_tag }}
             {{ form.creditor_agent }}
             <a href="{% url 'create_creditor_agentGPT4' %}" class="btn btn-link">Crear nuevo agente</a>
           </div>
@@ -60,32 +54,18 @@
       </div>
     </div>
 
+    <!-- Información de la Transferencia -->
     <div class="card custom-card mb-4">
       <div class="custom-card-header">Información de la Transferencia</div>
       <div class="card-body custom-card-body">
         <div class="row g-3">
-          <div class="col-md-4">
-            <label for="id_instructed_amount" class="form-label">Monto</label>
-            {{ form.instructed_amount }}
-          </div>
-          <div class="col-md-4">
-            <label for="id_currency" class="form-label">Moneda</label>
-            {{ form.currency }}
-          </div>
-          <div class="col-md-4">
-            <label for="id_purpose_code" class="form-label">Código de Propósito</label>
-            {{ form.purpose_code }}
-          </div>
+          <div class="col-md-4">{{ form.instructed_amount.label_tag }}{{ form.instructed_amount }}</div>
+          <div class="col-md-4">{{ form.currency.label_tag }}{{ form.currency }}</div>
+          <div class="col-md-4">{{ form.purpose_code.label_tag }}{{ form.purpose_code }}</div>
         </div>
         <div class="row g-3 mt-3">
-          <div class="col-md-6">
-            <label for="id_requested_execution_date" class="form-label">Fecha de Ejecución</label>
-            {{ form.requested_execution_date }}
-          </div>
-          <div class="col-md-6">
-            <label for="id_remittance_information_unstructured" class="form-label">Referencia de Pago</label>
-            {{ form.remittance_information_unstructured }}
-          </div>
+          <div class="col-md-6">{{ form.requested_execution_date.label_tag }}{{ form.requested_execution_date }}</div>
+          <div class="col-md-6">{{ form.remittance_information_unstructured.label_tag }}{{ form.remittance_information_unstructured }}</div>
         </div>
       </div>
     </div>

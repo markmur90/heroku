@@ -40,6 +40,8 @@ urlpatterns = [
         views.send_transfer_gateway_view,
         name="send_transfer_gateway_viewGPT4",
     ),
+    
+    # Envío seguro
     path(
         "transfers/<str:payment_id>/send-banco/",
         send_transfer_bank_view,

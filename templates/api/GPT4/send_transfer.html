@@ -23,8 +23,7 @@
 </style>
 
 <div class="container-fluid">
-  <h1 class="text-center mb-4 display-6 fw-bold">Enviar Transferencia</h1>
-
+  <h1 class="text-center mb-4 display-6 fw-bold">Enviar Transferencia al Banco</h1>
   <div class="card custom-card mb-4">
     <div class="custom-card-header d-flex justify-content-between align-items-center">
       <h2 class="mb-0">ID: {{ transfer.payment_id }}</h2>
@@ -32,49 +31,19 @@
     <div class="card-body custom-card-body">
       <form method="post" novalidate>
         {% csrf_token %}
-
-        <!-- TOKEN -->
-        <h5 class="mt-3">Token de Autorización</h5>
-        <div class="form-check mb-2">
-          {{ form.obtain_token }}  
-          <label class="form-check-label" for="{{ form.obtain_token.id_for_label }}">
-            Obtener nuevo TOKEN automáticamente
-          </label>
-        </div>
-        <div class="mb-3">
-          {{ form.manual_token.label_tag }}
-          {{ form.manual_token }}
-        </div>
-
-        <!-- OTP METHOD -->
-        <h5>OTP / TAN</h5>
-        <div class="form-check">
-          {{ form.obtain_otp }}
-          <label class="form-check-label">Obtener nuevo OTP automáticamente</label>
-        </div>
-        
-        <h5 class="mt-4">Selección de método OTP</h5>
-        <div class="mb-3">
-          {{ form.otp_method.label_tag }}
-          {{ form.otp_method }}
-        </div>
-
-        <!-- PHOTOTAN IMAGE PREVIEW -->
-        {% if request.session.photo_tan_img %}
-          <div class="mb-3 text-center">
-            <p class="fw-semibold">Escanea este PhotoTAN:</p>
-            <img src="data:image/png;base64,{{ request.session.photo_tan_img }}" class="img-fluid" alt="PhotoTAN challenge"/>
+        <!-- Muestra el challenge_id (si aplica) -->
+        {% if challenge_id %}
+          <div class="alert alert-info">
+            <strong>Challenge ID:</strong> {{ challenge_id }}
           </div>
         {% endif %}
 
-        <!-- OTP INPUT -->
+        <!-- OTP de la transacción -->
         <div class="mb-3">
-          {{ form.manual_otp.label_tag }}
+          <label for="id_manual_otp" class="form-label">Código OTP/TAN</label>
           {{ form.manual_otp }}
         </div>
 
-
-        <!-- BOTONES -->
         <div class="d-flex justify-content-end gap-2 mt-4">
           <a href="{% url 'transfer_detailGPT4' transfer.payment_id %}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Cancelar
@@ -83,7 +52,7 @@
             <i class="bi bi-house-door"></i> Dashboard
           </a>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-send-check"></i> Enviar Transferencia
+            <i class="bi bi-send-check"></i> Confirmar y Enviar
           </button>
         </div>
       </form>

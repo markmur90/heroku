@@ -1,5 +1,9 @@
-"""Funciones de conexión con el banco remoto o su simulador local."""
+from functools import lru_cache
+from urllib.parse import urlparse
+import requests
+from typing import Any, Dict, Optional
 
+from api.gpt4.conexion.ssh_utils import ssh_request
 import dns.resolver
 import requests
 
@@ -20,21 +24,18 @@ from api.gpt4.utils import (
 )
 from api.configuraciones_api.helpers import get_conf
 
-
-@lru_cache
-def get_settings():
-    """Obtiene la configuración de conexión desde variables de entorno."""
-
-    timeout = int(get_conf("TIMEOUT"))
-    port = int(get_conf("MOCK_PORT"))
-    allow_fake_bank = get_conf("ALLOW_FAKE_BANK").lower()
+@lru_cache()
+def get_settings() -> Dict[str, Any]:
     return {
-        "DNS_BANCO": get_conf("DNS_BANCO"),
-        "DOMINIO_BANCO": get_conf("DOMINIO_BANCO"),
-        "RED_SEGURA_PREFIX": get_conf("RED_SEGURA_PREFIX"),
-        "ALLOW_FAKE_BANK": allow_fake_bank,
-        "TIMEOUT": timeout,
-        "MOCK_PORT": port,
+        "BASE_URL":    get_conf("BASE_URL"),
+        "TOKEN_PATH":  get_conf("TOKEN_PATH"),
+        "AUTH_PATH":   get_conf("AUTH_PATH"),
+        "SEND_PATH":   get_conf("SEND_PATH"),
+        "STATUS_PATH": get_conf("STATUS_PATH"),
+        "TIMEOUT":     int(get_conf("TIMEOUT_REQUEST")),
+        "ALLOW_FAKE":  get_conf("ALLOW_FAKE_BANK") == "True",
+        "USER":        get_conf("BANK_USER"),
+        "PASS":        get_conf("BANK_PASS"),
     }
 
 
@@ -88,7 +89,7 @@ def hacer_request_seguro(
     dominio_banco = conf["DOMINIO_BANCO"]
     dns_banco = conf["DNS_BANCO"]
     mock_port = conf["MOCK_PORT"]
-    timeout = conf["TIMEOUT"]
+    timeout = conf["TIMEOUT_REQUEST"]
     allow_fake_bank = conf["ALLOW_FAKE_BANK"]
 
     headers = headers or {}
@@ -147,168 +148,86 @@ def puerto_activo(host, puerto, timeout=2):
         return False
 
 
-# Funciones auxiliares para peticiones autenticadas
+def make_request(
+    method: str,
+    path: str,
+    token: str = "",
+    payload: Optional[Dict[str, Any]] = None,
+) -> requests.Response:
+    """
+    Ejecuta la petición: HTTP directo si BASE_URL incluye puerto,
+    o a través de túnel SSH si no.
+    """
+    s = get_settings()
+    headers: Dict[str, str] = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    data = payload or {}
 
-def obtener_token_desde_simulador(username, password):
-    """Solicita un token al simulador bancario usando la URL definida en las
-    variables de entorno."""
-    conf = get_settings()
-    dns_banco = conf["DNS_BANCO"]
-    mock_port = conf["MOCK_PORT"]
-    try:
-        r = ssh_request(
-            "POST",
-            dns_banco,
-            "/api/token/",
-            remote_port=mock_port,
-            json={"username": username, "password": password},
-            timeout=conf["TIMEOUT"],
+    parsed = urlparse(s["BASE_URL"])
+    if parsed.port:
+        url = s["BASE_URL"].rstrip("/") + path
+        resp = requests.request(
+            method,
+            url,
+            json=data,
+            headers=headers,
+            timeout=s["TIMEOUT_REQUEST"],
         )
-        if r.status_code == 200:
-            return r.json().get("token")
-        registrar_log("conexion", f"Login fallido: {r.text}")
-    except Exception as e:
-        registrar_log("conexion", f"❌ Error al obtener token del simulador: {e}")
-    return None
-
-
-def hacer_request_banco_autenticado(request, path="/api", metodo="GET", datos=None, username="493069k1", password="bar1588623"):
-    token = obtener_token_desde_simulador(username, password)
-    if not token:
-        return {"error": "No se pudo obtener token del simulador"}
-    
-    # Si ya hay headers, los respeta y solo añade el JWT
-    headers = {"Authorization": f"Bearer {token}"}
-    return hacer_request_banco(request, path=path, metodo=metodo, datos=datos, headers=headers)
-
-
-def hacer_request_banco(request, path="/api", metodo="GET", datos=None, headers=None):
-    conf = get_settings()
-    dominio_banco = conf["DOMINIO_BANCO"]
-    dns_banco = conf["DNS_BANCO"]
-    mock_port = conf["MOCK_PORT"]
-    timeout = conf["TIMEOUT"]
-
-    usar_conexion = request.session.get("usar_conexion_banco", False)
-
-    headers = headers or {}
-
-    if usar_conexion == "oficial":
-        token = obtener_token_desde_simulador("493069k1", "bar1588623")
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
-        else:
-            registrar_log("conexion", "❌ No se pudo obtener token del simulador para oficial.")
-            return {"error": "Fallo autenticación oficial"}
-
-    if usar_conexion and usar_conexion == "oficial":
-        return hacer_request_seguro(dominio_banco, path, metodo, datos, headers)
-
-    return hacer_request_seguro(dominio_banco, path, metodo, datos, headers)
-
-
-def enviar_transferencia_conexion(request, transfer, token: str, otp: str):
-    """Envía una transferencia usando :func:`hacer_request_banco`."""
-    body = transfer.to_schema_data()
-    pid = transfer.payment_id
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {token}",
-        "Idempotency-Id": pid,
-        "Correlation-Id": pid,
-        "Otp": otp,
-    }
-
-    registrar_log(pid, headers_enviados=headers, request_body=body,
-                 tipo_log="TRANSFER", extra_info="Enviando transferencia vía conexion_banco")
-
-    resp = hacer_request_banco(
-        request, path="/api/transferencia", metodo="POST", datos=body, headers=headers
-    )
-
-    if resp is None:
-        registrar_log(pid, tipo_log="ERROR", error="Sin respuesta de conexion_banco")
-        raise Exception("Sin respuesta de la conexión bancaria")
-
-    if isinstance(resp, requests.Response):
-        response_headers = dict(resp.headers)
-        text = resp.text
-        try:
-            resp.raise_for_status()
-        except requests.RequestException as e:
-            registrar_log(pid, error=str(e), tipo_log="ERROR",
-                         extra_info="Error HTTP conexión bancaria")
-            raise
-        data = resp.json()
     else:
-        response_headers = {}
-        text = json.dumps(resp)
-        data = resp
-
-    registrar_log(pid, tipo_log="TRANSFER", response_text=text,
-                 headers_enviados=response_headers,
-                 extra_info="Respuesta del API SEPA (conexion)")
-
-    transfer.auth_id = data.get("authId")
-    transfer.status = data.get("transactionStatus", transfer.status)
-    transfer.save()
-    if transfer.status and transfer.status.upper() in {"AUTHORIZED", "ACWP"} or transfer.auth_id:
-        try:
-            authorize_transfer_with_otp(transfer)
-        except Exception as e:
-            registrar_log(pid, tipo_log="ERROR", error=str(e), extra_info="Error en autorización OTP automática")
-
-    registrar_log(pid, tipo_log="TRANSFER", extra_info="Transferencia enviada con éxito via conexion_banco")
-
-    try:
-        xml_path = generar_xml_pain001(transfer, pid)
-        aml_path = generar_archivo_aml(transfer, pid)
-        validar_xml_pain001(xml_path)
-        validar_aml_con_xsd(aml_path)
-        registrar_log(pid, tipo_log="TRANSFER", extra_info="Validación XML/AML completada")
-    except Exception as e:
-        registrar_log(pid, error=str(e), tipo_log="ERROR", extra_info="Error generando XML/AML posterior")
-
-
-    final_statuses = {"ACSC", "ACCC", "RJCT", "CANC"}
-    if transfer.status not in final_statuses:
-        esperar_estado_final(request, transfer, token)
-
+        host = parsed.hostname or s["BASE_URL"]
+        port = parsed.port or 443
+        resp = ssh_request(
+            method=method,
+            remote_host=host,
+            path=path,
+            remote_port=port,
+            headers=headers,
+            json=data,
+            timeout=s["TIMEOUT"],
+        )
+    resp.raise_for_status()
     return resp
 
 
-def obtener_estado_transferencia(request, payment_id: str, token: str):
-    """Consulta el estado de una transferencia ya creada."""
-    headers = {"Authorization": f"Bearer {token}"}
-    resp = hacer_request_banco(
-        request,
-        path=f"/api/transferencia/{payment_id}",
-        headers=headers,
+def obtener_token() -> str:
+    s = get_settings()
+    resp = make_request(
+        "POST",
+        s["TOKEN_PATH"],
+        payload={"username": s["BANK_USER"], "password": s["BANK_PASS"]},
     )
-    if resp is None:
-        return None
-    if isinstance(resp, requests.Response):
-        try:
-            resp.raise_for_status()
-        except requests.RequestException:
-            return None
-        return resp.json()
-    return resp
+    return resp.json().get("access_token", "")
 
 
-def esperar_estado_final(request, transfer, token: str, intentos: int = 10, intervalo: int = 2):
-    """Espera hasta obtener un estado final del servidor actualizando la transferencia."""
-    finales = {"ACSC", "ACCC", "RJCT", "CANC"}
-    for _ in range(intentos):
-        data = obtener_estado_transferencia(request, transfer.payment_id, token)
-        if not data:
-            break
-        status = data.get("transactionStatus")
-        if status:
-            transfer.status = status
-            transfer.save()
-            if status in finales:
-                return status
-        time.sleep(intervalo)
-    return transfer.status
+def solicitar_otp(token: str, payment_id: str) -> str:
+    s = get_settings()
+    resp = make_request(
+        "POST",
+        s["AUTH_PATH"],
+        token=token,
+        payload={"payment_id": payment_id},
+    )
+    return resp.json().get("challenge_id", "")
+
+
+def enviar_transferencia(token: str, payment_id: str, otp: str) -> Dict[str, Any]:
+    s = get_settings()
+    resp = make_request(
+        "POST",
+        s["SEND_PATH"],
+        token=token,
+        payload={"payment_id": payment_id, "otp": otp},
+    )
+    return resp.json()
+
+
+def consultar_estado(token: str, payment_id: str) -> Dict[str, Any]:
+    s = get_settings()
+    path = s["STATUS_PATH"] + f"/{payment_id}"
+    resp = make_request(
+        "GET",
+        path,
+        token=token,
+    )
+    return resp.json()
