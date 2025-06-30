@@ -1,0 +1,29 @@
+/* admin-overrides.css */
+
+/* Cabecera con fondo personalizado */
+#header {
+  background-color: #2c3e50;
+}
+
+/* Títulos de módulos en azul */
+.module h2 {
+  color: #4a90e2;
+}
+
+/* Tablas del changelist más compactas */
+.admin-changelist table th,
+.admin-changelist table td {
+  padding: 6px 8px;
+}
+
+/* Botones primarios con borde redondeado */
+button, .button {
+  border-radius: 6px;
+}
+
+/* Ajuste responsivo del logo en mobile */
+@media (max-width: 600px) {
+  #site-name img {
+    height: 30px;
+  }
+}

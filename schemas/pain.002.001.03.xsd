@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:iso:std:iso:20022:tech:xsd:pain.002.001.03"
+           xmlns="urn:iso:std:iso:20022:tech:xsd:pain.002.001.03"
+           elementFormDefault="qualified">
+
+  <xs:element name="Document">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="CstmrPmtStsRpt">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="GrpHdr">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="MsgId" type="xs:string"/>
+                    <xs:element name="CreDtTm" type="xs:dateTime"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="OrgnlGrpInfAndSts" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="OrgnlMsgId" type="xs:string"/>
+                    <xs:element name="OrgnlMsgNmId" type="xs:string"/>
+                    <xs:element name="GrpSts" type="xs:string" minOccurs="0"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="OrgnlPmtInfAndSts" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="OrgnlPmtInfId" type="xs:string" minOccurs="0"/>
+                    <xs:element name="TxInfAndSts" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="OrgnlInstrId" type="xs:string" minOccurs="0"/>
+                          <xs:element name="TxSts" type="xs:string"/>
+                          <xs:element name="StsRsnInf" minOccurs="0">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="Rsn">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element name="Cd" type="xs:string"/>
+                                    </xs:sequence>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>
