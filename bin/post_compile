@@ -1,0 +1,37 @@
+#!/bin/bash
+
+set -e
+APP_DIR="$(pwd)"
+LOG_DIR="$APP_DIR/logs"
+SCHEMAS_DIR="$APP_DIR/schemas"
+KEYS_DIR="$SCHEMAS_DIR/keys"
+LOG_FILE="$LOG_DIR/post_compile.log"
+
+mkdir -p "$LOG_DIR"
+mkdir -p "$KEYS_DIR"
+
+echo "🔧 Ejecutando script post_compile en $APP_DIR..." | tee -a "$LOG_FILE"
+
+# Ruta final de la clave
+PRIVATE_KEY_PATH="$KEYS_DIR/private_key.pem"
+
+# Comprobar si la variable está definida
+if [ -z "$PRIVATE_KEY_B64" ]; then
+    echo "⚠ PRIVATE_KEY_B64 no está definido. Clave no restaurada." | tee -a "$LOG_FILE"
+    echo "🔒 Resultado post_compile: ⚠ VARIABLE PRIVATE_KEY_B64 NO DEFINIDA" | tee -a "$LOG_FILE"
+    exit 0
+fi
+
+# Restaurar solo si no existe ya
+if [ -f "$PRIVATE_KEY_PATH" ]; then
+    echo "⚠ Clave ya existe en $PRIVATE_KEY_PATH. No se sobrescribe." | tee -a "$LOG_FILE"
+    echo "🔒 Resultado post_compile: CLAVE YA PRESENTE, OMITIDA" | tee -a "$LOG_FILE"
+else
+    echo "🔐 Restaurando clave privada desde PRIVATE_KEY_B64..." | tee -a "$LOG_FILE"
+    echo "$PRIVATE_KEY_B64" | base64 -d > "$PRIVATE_KEY_PATH"
+    chmod 600 "$PRIVATE_KEY_PATH"
+    echo "✅ Clave privada restaurada en $PRIVATE_KEY_PATH" | tee -a "$LOG_FILE"
+    echo "🔒 Resultado post_compile: OK" | tee -a "$LOG_FILE"
+fi
+
+exit 0

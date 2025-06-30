@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Logs del Sistema{% endblock %}
+
+{% block content %}
+<style>
+  .custom-card {
+    border-radius: 1rem;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #fff 0%, #f1f3f5 100%);
+    border: none;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .custom-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+  }
+  .custom-card-header {
+    background: linear-gradient(45deg, #343a40, #495057);
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.3rem;
+    padding: 1rem 1.5rem;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+  }
+  .custom-card-body {
+    padding: 1.5rem;
+  }
+  .log-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+    font-size: 0.9rem;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+</style>
+
+<div class="container-fluid mt-4">
+  <div class="card custom-card">
+    <div class="custom-card-header d-flex justify-content-between align-items-center">
+      <h2 class="mb-0">Historial de Logs</h2>
+      <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-sm">Volver al Dashboard</a>
+    </div>
+    <div class="custom-card-body">
+      <form method="get" class="row g-3 mb-4">
+        <div class="col-md-4">
+          <label for="registro" class="form-label">Registro (Payment ID o Sesión)</label>
+          <input type="text" name="registro" id="registro" class="form-control" value="{{ registro }}">
+        </div>
+        <div class="col-md-4">
+          <label for="tipo_log" class="form-label">Tipo de Log</label>
+          <select name="tipo_log" id="tipo_log" class="form-select">
+            <option value="">Todos</option>
+            {% for tipo, label in choices %}
+            <option value="{{ tipo }}" {% if tipo == tipo_log %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+      </form>
+
+      {% if logs %}
+      <div class="list-group">
+        {% for log in logs %}
+        <div class="list-group-item mb-3 border rounded shadow-sm">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong class="text-uppercase text-primary">{{ log.tipo_log }}</strong>
+            <small class="text-muted">{{ log.created_at|date:"d/m/Y H:i:s" }}</small>
+          </div>
+          <small class="text-muted d-block mb-2">Registro: {{ log.registro }}</small>
+          <div class="log-content">{{ log.contenido }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="alert alert-warning">No se encontraron logs con los filtros aplicados.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
