@@ -49,17 +49,7 @@ urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('app/core/', include('api.core.urls')),
-    # path('app/accounts/', include('api.accounts.urls')),
-    # path('app/transactions/', include('api.transactions.urls')),
-    path('app/transfers/', include('api.transfers.urls')),
-    # path('app/collection/', include('api.collection.urls')),
-    # path('app/sct/', include('api.sct.urls')),
-    # path('app/sepa_payment/', include('api.sepa_payment.urls')),
-    # path('app/gpt3/', include('api.gpt3.urls')),
     path('app/gpt4/', include('api.gpt4.urls')),
-    
-
-    # path('app/gpt/', include('api.gpt.urls')),
     path('', include('api.urls')),
 ]
  

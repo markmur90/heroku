@@ -5,7 +5,6 @@ from api.core.choices import TYPE, ACCOUNT_STATUS
 from api.core.middleware import CurrentUserMiddleware
 from api.core.mixin import UppercaseCharFieldMixin
 from api.authentication.models import CustomUser
-from api.transfers.models import SEPA3
 
 class CoreModel(UppercaseCharFieldMixin, models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -92,9 +91,7 @@ class StatusResponse(models.Model):
     code = models.ForeignKey(TransactionStatus, on_delete=models.CASCADE)
     text = models.CharField(max_length=50)
 
-class PaymentResponse(models.Model):
-    payment_id = models.ForeignKey(SEPA3, on_delete=models.CASCADE)
-    transaction_status = models.ForeignKey(TransactionStatus, on_delete=models.CASCADE)
+
 
 
 
