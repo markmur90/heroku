@@ -1,0 +1,4 @@
+[2025-07-02 02:46:25] ERROR AL GUARDAR LOG EN DB para None: el valor nulo en la columna «registro» de la relación «gpt4_logtransferencia» viola la restricción de no nulo
+DETAIL:  La fila que falla contiene (4, null, TRANSFER_ERROR, 
+===============================================================..., 2025-07-02 00:46:25.721712+00).
+

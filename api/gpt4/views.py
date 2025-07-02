@@ -60,12 +60,8 @@ from api.gpt4.utils import (
     resolver_challenge_pushtan, send_transfer, update_sca_request,
     wait_for_final_status
 )
-from api.gpt4_conexion.conexion_banco_refactor import (
-    hacer_request_banco,
-    enviar_transferencia_conexion,
-    obtener_token_desde_simulador,
-)
 from api.gpt4.conexion.conexion_banco import (
+    make_request,
     resolver_ip_dominio,
     get_settings as banco_settings,
 )
@@ -799,144 +795,6 @@ def send_transfer_view(request, payment_id):
     return render(request, "api/GPT4/send_transfer.html", {"form": form, "transfer": transfer})
 
 
-@requiere_conexion_banco
-def send_transfer_gateway_view(request, payment_id):
-    """Unified view to handle connection, simulator and fake modes."""
-    mode = request.GET.get("mode") or "conexion"
-    transfer = get_object_or_404(Transfer, payment_id=payment_id)
-
-    if mode == "fake":
-        if not get_settings()["ALLOW_FAKE_BANK"]:
-            return HttpResponseForbidden("Modo simulado desactivado")
-        if request.method == "POST":
-            transfer.status = "ACSP"
-            transfer.save()
-            registrar_log(payment_id, tipo_log="TRANSFER", extra_info="Transferencia simulada completada")
-            return JsonResponse({"status": transfer.status})
-        return render(request, "api/GPT4/send_transfer.html", {"transfer": transfer})
-
-    if mode == "simulator":
-        form = SendTransferForm(request.POST or None)
-        settings_data = banco_settings()
-        ip_sim = resolver_ip_dominio(settings_data["DOMINIO_BANCO"])
-
-        if request.method == "GET":
-            token = obtener_token_desde_simulador("493069k1", "bar1588623")
-            if not token:
-                messages.error(request, "No se pudo obtener token del simulador.")
-                return redirect('transfer_detailGPT4', payment_id=payment_id)
-            request.session['sim_token'] = token
-            try:
-                challenge_id = crear_challenge_mtan(transfer, token, transfer.payment_id)
-                request.session['sim_challenge'] = challenge_id
-                messages.info(request, "OTP enviado por el simulador. Ingréselo para continuar.")
-            except Exception as e:
-                messages.error(request, str(e))
-                return redirect('transfer_detailGPT4', payment_id=payment_id)
-
-        if request.method == "POST" and form.is_valid():
-            otp = form.cleaned_data['otp']
-            token = request.session.get('sim_token')
-            if not token:
-                messages.error(request, "Token de simulador no disponible.")
-                return redirect('send_transfer_gateway_viewGPT4', payment_id=payment_id, mode='simulator')
-            try:
-                enviar_transferencia_conexion(request, transfer, token, otp)
-                if transfer.status == 'PDNG':
-                    wait_for_final_status(transfer, token)
-                messages.success(request, "Transferencia enviada correctamente.")
-                return redirect('transfer_detailGPT4', payment_id=payment_id)
-            except Exception as e:
-                messages.error(request, str(e))
-                return redirect('transfer_detailGPT4', payment_id=payment_id)
-
-        return render(request, "api/GPT4/send_transfer.html", {
-            "form": form,
-            "transfer": transfer,
-            "ip_simulator": ip_sim,
-        })
-
-    form = SendTransferForm(request.POST or None, instance=transfer)
-    token = None
-
-    if request.session.get('oauth_success') and request.session.get('current_payment_id') == payment_id:
-        session_token = request.session.get('access_token')
-        expires = request.session.get('token_expires', 0)
-        if session_token and time.time() < expires - 60:
-            token = session_token
-
-    if request.method == "POST":
-        try:
-            if not form.is_valid():
-                registrar_log(transfer.payment_id, tipo_log='ERROR', error="Formulario inválido", extra_info="Errores en validación")
-                messages.error(request, "Formulario inválido. Revisa los campos.")
-                return redirect('transfer_detailGPT4', payment_id=payment_id)
-
-            manual_token = form.cleaned_data['manual_token']
-            final_token = manual_token or token
-
-            if not final_token:
-                registrar_log(transfer.payment_id, tipo_log='AUTH', error="Token no disponible", extra_info="OAuth no iniciado o token expirado")
-                request.session['return_to_send'] = True
-                return redirect(f"{reverse('oauth2_authorize')}?payment_id={payment_id}")
-
-            obtain_otp = form.cleaned_data['obtain_otp']
-            manual_otp = form.cleaned_data['manual_otp']
-            otp = None
-
-            try:
-                if obtain_otp:
-                    method = form.cleaned_data.get('otp_method')
-                    if method == 'MTAN':
-                        challenge_id = crear_challenge_mtan(transfer, final_token, transfer.payment_id)
-                        transfer.auth_id = challenge_id
-                        transfer.save()
-                        registrar_log(transfer.payment_id, tipo_log='OTP', extra_info=f"Challenge MTAN creado con ID {challenge_id}")
-                        return redirect('transfer_update_scaGPT4', payment_id=transfer.payment_id)
-                    elif method == 'PHOTOTAN':
-                        challenge_id, img64 = crear_challenge_phototan(transfer, final_token, transfer.payment_id)
-                        request.session['photo_tan_img'] = img64
-                        transfer.auth_id = challenge_id
-                        transfer.save()
-                        registrar_log(transfer.payment_id, tipo_log='OTP', extra_info=f"Challenge PHOTOTAN creado con ID {challenge_id}")
-                        return redirect('transfer_update_scaGPT4', payment_id=transfer.payment_id)
-                    else:
-                        otp = resolver_challenge_pushtan(crear_challenge_pushtan(transfer, final_token, transfer.payment_id), final_token, transfer.payment_id)
-                elif manual_otp:
-                    otp = manual_otp
-                else:
-                    registrar_log(transfer.payment_id, tipo_log='OTP', error="No se proporcionó OTP", extra_info="Ni automático ni manual")
-                    messages.error(request, "Debes obtener o proporcionar un OTP.")
-                    return redirect('transfer_detailGPT4', payment_id=payment_id)
-            except Exception as e:
-                registrar_log(transfer.payment_id, tipo_log='ERROR', error=str(e), extra_info="Error obteniendo OTP")
-                messages.error(request, str(e))
-                return redirect('transfer_detailGPT4', payment_id=payment_id)
-
-            try:
-                enviar_transferencia_conexion(request, transfer, final_token, otp)
-                registrar_log(transfer.payment_id, tipo_log='TRANSFER', extra_info="Transferencia enviada correctamente (conexion)")
-                if transfer.status == 'PDNG':
-                    wait_for_final_status(transfer, final_token)
-                request.session.pop('access_token', None)
-                request.session.pop('refresh_token', None)
-                request.session.pop('token_expires', None)
-                request.session.pop('oauth_success', None)
-                request.session.pop('current_payment_id', None)
-                messages.success(request, "Transferencia enviada correctamente.")
-                return redirect('transfer_detailGPT4', payment_id=payment_id)
-            except Exception as e:
-                registrar_log(transfer.payment_id, tipo_log='ERROR', error=str(e), extra_info="Error enviando transferencia (conexion)")
-                messages.error(request, str(e))
-                return redirect('transfer_detailGPT4', payment_id=payment_id)
-
-        except Exception as e:
-            registrar_log(transfer.payment_id, tipo_log='ERROR', error=str(e), extra_info="Error inesperado en vista")
-            messages.error(request, f"Error inesperado: {str(e)}")
-            return redirect('transfer_detailGPT4', payment_id=payment_id)
-
-    return render(request, "api/GPT4/send_transfer.html", {"form": form, "transfer": transfer})
-
 class ClaveGeneradaListView(ListView):
     model = ClaveGenerada
     template_name = 'api/claves/lista.html'
@@ -984,7 +842,7 @@ class ClaveGeneradaDeleteView(DeleteView):
 @require_GET
 @requiere_conexion_banco
 def prueba_conexion_banco(request):
-    respuesta = hacer_request_banco(request, path="/api/transferencia")
+    respuesta = make_request(request, path="/api/transferencia")
     if respuesta is None:
         return JsonResponse({"estado": "fallo", "detalle": "No se obtuvo respuesta."}, status=502)
     return JsonResponse({"estado": "ok", "respuesta": respuesta})

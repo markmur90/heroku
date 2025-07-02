@@ -724,7 +724,7 @@ def send_transfer2(
         )
     return response
 
-def send_transfer(transfer: Transfer, use_token: str = None, use_otp: str = None,
+def send_transfer3(transfer: Transfer, use_token: str = None, use_otp: str = None,
                   regenerate_token: bool = False, regenerate_otp: bool = False) -> requests.Response:
     settings = get_settings()
     API_URL = settings["API_URL"]    
@@ -781,6 +781,188 @@ def send_transfer(transfer: Transfer, use_token: str = None, use_otp: str = None
     return resp
 
 
+def send_transfer4(transfer: Transfer,
+                  use_token: str = None,
+                  use_otp: str = None,
+                  regenerate_token: bool = False,
+                  regenerate_otp: bool = False) -> dict:
+    """
+    Envía una transferencia al simulador y maneja el flujo completo de OTP y validaciones.
+    """
+    pid = transfer.payment_id
+
+    # 1️⃣ Token: obtención desde simulador o reuso si no se regenera
+    token = use_token if use_token and not regenerate_token else obtener_token_simulador()
+
+    # 2️⃣ OTP: si no se pasa manualmente, solicitar al usuario
+    if use_otp and not regenerate_otp:
+        otp = use_otp
+    else:
+        otp = input(f"Introduce el código OTP para la transferencia {pid}: ")
+
+    # 3️⃣ Construir cuerpo y headers de la petición
+    body = transfer.to_schema_data()
+    headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {token}',
+        'Idempotency-Id': pid,
+        'Correlation-Id': pid,
+        'Otp': otp
+    }
+    registrar_log(pid,
+                  headers_enviados=headers,
+                  request_body=body,
+                  tipo_log='TRANSFER',
+                  extra_info="Enviando transferencia SEPA")
+
+    # 4️⃣ Envío inicial de la transferencia
+    response = requests.post(
+        settings.SIMULADOR_API_URL,
+        headers=headers,
+        json=body,
+        timeout=settings.TIMEOUT_REQUEST
+    )
+    registrar_log(pid,
+                  tipo_log='TRANSFER',
+                  response_text=response.text,
+                  headers_enviados=dict(response.headers),
+                  extra_info="Respuesta del API SEPA")
+    response.raise_for_status()
+    data = response.json()
+
+    # Actualizar objeto Transfer en BD
+    transfer.auth_id = data.get('authId')
+    transfer.status = data.get('transactionStatus', transfer.status)
+    transfer.save()
+    registrar_log(pid,
+                  tipo_log='TRANSFER',
+                  extra_info=f"Transferencia enviada con éxito con status {transfer.status}")
+
+    # 5️⃣ Generación y validación de XML/AML posteriores
+    try:
+        xml_path = generar_xml_pain001(transfer, pid)
+        aml_path = generar_archivo_aml(transfer, pid)
+        validar_xml_pain001(xml_path)
+        validar_aml_con_xsd(aml_path)
+        registrar_log(pid,
+                      tipo_log='TRANSFER',
+                      extra_info="Validación XML/AML completada")
+    except Exception as e:
+        registrar_log(pid,
+                      error=str(e),
+                      tipo_log='ERROR',
+                      extra_info="Error generando XML/AML posterior")
+        raise
+
+    return data
+
+
+from api.gpt4.utils import registrar_log, generar_xml_pain001
+import logging
+import requests
+from django.utils.timezone import now
+
+logger = logging.getLogger(__name__)
+
+def send_transfer(transfer, request):
+    SIMU_BASE = "http://80.78.30.242:9181"
+    headers = {k: v for k, v in request.META.items() if k.startswith("HTTP_")}
+    pid = transfer.payment_id
+
+    # 1. Generar XML
+    xml_path = generar_xml_pain001(transfer, pid)
+    registrar_log(transfer.payment_id, "XML_GENERADO", extra_info=f"Archivo: {xml_path}")
+    logger.info(f"[{transfer.payment_id}] XML generado en {xml_path}")
+
+    # 2. Login
+    login_payload = {"username": "markmur88", "password": "Ptf8454Jd55"}
+    login_response = requests.post(f"{SIMU_BASE}/auth/login", json=login_payload)
+    token = login_response.json().get("token")
+    if not token:
+        transfer.status = "RJCT"
+        transfer.save()
+        registrar_log(transfer.payment_id, "LOGIN_ERROR", error="Token no recibido", response_text=login_response.text)
+        logger.error(f"[{transfer.payment_id}] Falló login")
+        return {"error": "Login fallido"}
+    auth_headers = {"Authorization": f"Bearer {token}", **headers}
+
+    # 3. Payload completo
+    payload = {
+        "payment_id": transfer.payment_id,
+        "debtor_account_id": transfer.debtor_account.id,
+        "creditor_account": transfer.creditor_account.id,
+        "debtor": transfer.debtor.id,
+        "creditor": transfer.creditor.id,
+        "instructed_amount": float(transfer.instd_amount),
+        "currency": transfer.currency,
+        "requested_execution_date": str(transfer.requested_execution_date),
+        "purpose_code": transfer.purpose_code,
+        "remittance_information_unstructured": transfer.remittance_information_unstructured,
+        "payment_identification": transfer.payment_identification.id if transfer.payment_identification else None,
+        "auth_id": request.user.username,
+        "status": "RCVD"
+    }
+
+    # 4. Enviar transferencia
+    transfer.status = "RCVD"
+    transfer.save()
+    init_response = requests.post(f"{SIMU_BASE}/api/transfers/initiate", json=payload, headers=auth_headers)
+    init_data = init_response.json()
+    otp = init_data.get("otp")
+
+    registrar_log(
+        registro=transfer.payment_id,
+        tipo_log="ENVÍO TRANSFERENCIA",
+        headers_enviados=auth_headers,
+        request_body=payload,
+        response_headers=dict(init_response.headers),
+        response_text=init_response.text,
+        extra_info="Transferencia enviada al simulador"
+    )
+
+    # 5. Estado intermedio
+    transfer.status = "ACSP"
+    transfer.save()
+
+    registrar_log(
+        registro=transfer.payment_id,
+        tipo_log="OTP",
+        response_text=f"OTP recibido: {otp}"
+    )
+
+    # 6. Confirmar transferencia
+    confirm_payload = {"paymentId": transfer.payment_id, "otp": otp}
+    confirm_response = requests.post(f"{SIMU_BASE}/api/transfers/confirm", json=confirm_payload, headers=auth_headers)
+    confirm_data = confirm_response.json()
+
+    registrar_log(
+        registro=transfer.payment_id,
+        tipo_log="CONFIRMACIÓN",
+        request_body=confirm_payload,
+        response_headers=dict(confirm_response.headers),
+        response_text=confirm_response.text
+    )
+
+    final_status = confirm_data.get("status", "RJCT")
+    if final_status not in ["ACSC", "ACWC", "ACSP", "ACCP", "ACCC"]:
+        final_status = "RJCT"
+
+    # 7. Guardar resultado
+    transfer.status = final_status
+    transfer.auth_id = request.user.username
+    transfer.timestamp = now()
+    transfer.save()
+
+    registrar_log(
+        registro=transfer.payment_id,
+        tipo_log="FINALIZACIÓN",
+        extra_info=f"Estado final: {transfer.status}"
+    )
+
+    logger.info(f"[{transfer.payment_id}] Confirmada con estado {transfer.status}")
+    return confirm_data
+
 
 
 def limpiar_datos_sensibles(data):
@@ -813,7 +995,7 @@ from api.configuraciones_api.models import ConfiguracionAPI
 _access_token_cache = {}
 
 
-def get_access_token(payment_id: str = None, force_refresh: bool = False) -> str:
+def get_access_token2(payment_id: str = None, force_refresh: bool = False) -> str:
     """
     Obtiene un access_token vía OAuth2 Client-Credentials, con caching in-memory
     para reutilizar el token hasta su expiración, a menos que force_refresh=True.
@@ -877,7 +1059,12 @@ def get_access_token(payment_id: str = None, force_refresh: bool = False) -> str
     registrar_log(payment_id, tipo_log='AUTH', extra_info="Token obtenido y cacheado correctamente")
     return token
 
-
+def get_access_token(*args, **kwargs):
+    """
+    Obtiene el token JWT desde el simulador.
+    """
+    from api.utils.jwt_simulador import obtener_token_simulador
+    return obtener_token_simulador()
 def get_access_token_jwt(payment_id: str, force_refresh: bool = False) -> str:
     settings = get_settings()
     TOKEN_URL = settings["TOKEN_URL"]

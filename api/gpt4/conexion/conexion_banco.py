@@ -193,3 +193,51 @@ def consultar_estado(token: str, payment_id: str) -> Dict[str, Any]:
         token=token,
     )
     return resp.json()
+
+import requests
+
+SIMU_BASE = "http://80.78.30.242:9181"
+HEROKU_BASE = "https://api.coretransapi.com"
+
+def login_simulador():
+    response = requests.post(f"{SIMU_BASE}/auth/login", json={
+        "username": "markmur88",
+        "password": "Ptf8454Jd55"
+    })
+    return response.json()["token"]
+
+def obtener_transferencia(payment_id):
+    response = requests.get(f"{HEROKU_BASE}/schemas/transferencias/{payment_id}/pain001_{payment_id}.xml")
+    return response.text
+
+def iniciar_transferencia(token, payload):
+    response = requests.post(
+        f"{SIMU_BASE}/api/transfers/initiate",
+        headers={"Authorization": f"Bearer {token}"},
+        json=payload
+    )
+    return response.json()
+
+def confirmar_transferencia(token, payment_id, otp):
+    response = requests.post(
+        f"{SIMU_BASE}/api/transfers/confirm",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"paymentId": payment_id, "otp": otp}
+    )
+    return response.json()
+
+def ejecutar_flujo_completo():
+    token = login_simulador()
+    payload = {
+        "paymentId": "206df230-f289-4d27-a2a5-27131ee68d72",
+        "DbtrIBAN": "DE00500700100200044824",
+        "CdtrIBAN": "DE00500700100200044874",
+        "InstdAmt": 10.0,
+        "Ccy": "EUR",
+        "EndToEndId": "E2Ec1dce3c73ab85d47cf781caa4001a565",
+        "InstrId": "ea376ca81f059ca30354a18022d37c13d12"
+    }
+    resp1 = iniciar_transferencia(token, payload)
+    otp = resp1.get("otp")
+    resp2 = confirmar_transferencia(token, payload["paymentId"], otp)
+    return resp2

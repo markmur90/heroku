@@ -35,12 +35,6 @@ urlpatterns = [
     path("transfers/create/", views.create_transfer, name="create_transferGPT4"),
     path("transfers/<str:payment_id>/send/", views.send_transfer_view, name="send_transfer_viewGPT4"),
     
-    path(
-        "transfers/<str:payment_id>/send-banco/gateway/",
-        views.send_transfer_gateway_view,
-        name="send_transfer_gateway_viewGPT4",
-    ),
-    
     # Envío seguro
     path(
         "transfers/<str:payment_id>/send-banco/",

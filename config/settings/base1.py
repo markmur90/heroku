@@ -33,9 +33,9 @@ def intentar_cargar_variables(entorno):
 intentar_cargar_variables(DJANGO_ENV)
 
 # 3. Variables críticas
-SECRET_KEY = "MX2QfdeWkTc8ihotA_i1Hm7_4gYJQB4oVjOKFnuD6Cw"
-DEBUG      = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '.herokuapp.com', '.coretransapi.com', '80.78.30.242', '.onion', ]
+SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 
 
@@ -190,6 +190,14 @@ AUTHORIZE_URL="http://80.78.30.242:9181/oidc/authorize"
 OTP_URL="http://80.78.30.242:9181/otp/single"
 AUTH_URL="http://80.78.30.242:9181/auth/challenges"
 API_URL="http://80.78.30.242:9181/payments"
+
+# Configuración específica para el simulador
+SIMULADOR_SECRET_KEY  = os.environ['SIMULADOR_SECRET_KEY']
+SIMULADOR_API_URL     = os.environ['SIMULADOR_API_URL']
+SIMULADOR_LOGIN_URL   = os.environ['SIMULADOR_LOGIN_URL']
+SIMULADOR_VERIFY_URL  = os.environ['SIMULADOR_VERIFY_URL']
+SIMULADOR_USERNAME    = os.environ['SIMULADOR_USERNAME']
+SIMULADOR_PASSWORD    = os.environ['SIMULADOR_PASSWORD']
 
 REDIRECT_URI="https://api.coretransapi.com/oauth2/callback/"
 ORIGIN="https://api.coretransapi.com"
