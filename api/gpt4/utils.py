@@ -876,7 +876,7 @@ def send_transfer(transfer, request):
     logger.info(f"[{transfer.payment_id}] XML generado en {xml_path}")
 
     # 2. Login
-    login_payload = {"username": "markmur88", "password": "Ptf8454Jd55"}
+    login_payload = {"username": "493069k1", "password": "bar1588623"}
     login_response = requests.post(f"{SIMU_BASE}/auth/login", json=login_payload)
     token = login_response.json().get("token")
     if not token:

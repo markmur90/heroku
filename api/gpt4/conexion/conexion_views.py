@@ -26,46 +26,60 @@ from api.configuraciones_api.helpers import get_conf
 @require_http_methods(["GET", "POST"])
 def send_transfer_bank_view(request, payment_id):
     transfer = get_object_or_404(Transfer, payment_id=payment_id)
-    form = SendTransferForm(request.POST or None)
+
+    # Usamos context_mode para simplificar el form en esta vista
+    form = SendTransferForm(request.POST or None, context_mode='simple_otp')
 
     if request.method == "GET":
         try:
             token = obtener_token()
             challenge_id = solicitar_otp(token, payment_id)
+
             request.session["bank_token"] = token
             request.session["bank_challenge_id"] = challenge_id
+
             messages.info(request, "OTP enviado. Introduce el código para continuar.")
         except Exception as e:
             messages.error(request, f"Error al iniciar autenticación: {e}")
             return redirect("transfer_detailGPT4", payment_id=payment_id)
-        return render(request, "api/GPT4/send_transfer.html", {"transfer": transfer, "form": form})
 
-    if request.method == "POST" and form.is_valid():
-        otp = form.cleaned_data["otp"]
+    elif request.method == "POST" and form.is_valid():
+        otp = form.cleaned_data.get("manual_otp")
         token = request.session.get("bank_token")
+
         if not token:
             messages.error(request, "Sesión expirada. Reinicia el proceso.")
             return redirect("transfer_detailGPT4", payment_id=payment_id)
+
         try:
             resultado = enviar_transferencia(token, payment_id, otp)
             estado_final = consultar_estado(token, payment_id)
+
             transfer.status = estado_final.get("status", transfer.status)
             transfer.save()
+
             registrar_log(
                 payment_id,
                 tipo_log="TRANSFER",
-                extra_info=f"Resultado: {resultado}, Estado: {estado_final}"
+                extra_info=f"Resultado: {resultado}, Estado: {estado_final}",
             )
+
             messages.success(request, "Transferencia completada correctamente.")
-            for key in ("bank_token", "bank_challenge_id"):
-                request.session.pop(key, None)
+            request.session.pop("bank_token", None)
+            request.session.pop("bank_challenge_id", None)
+
             return redirect("transfer_detailGPT4", payment_id=payment_id)
+
         except Exception as e:
             registrar_log(payment_id, tipo_log="ERROR", error=str(e))
             messages.error(request, f"Error enviando transferencia: {e}")
             return redirect("transfer_detailGPT4", payment_id=payment_id)
 
-    return render(request, "api/GPT4/send_transfer_bank.html", {"transfer": transfer, "form": form})
+    return render(request, "api/GPT4/send_transfer_bank.html", {
+        "transfer": transfer,
+        "form": form,
+        "challenge_id": request.session.get("bank_challenge_id")
+    })
 
 @require_GET
 @requiere_conexion_banco

@@ -1,0 +1,120 @@
+
+================================================================================
+Fecha y hora: 2025-07-03 09:43:49
+================================================================================
+=== Info ===
+Transferencia creada
+
+
+================================================================================
+Fecha y hora: 2025-07-03 09:43:49
+================================================================================
+=== Info ===
+XML pain.001 generado en schemas/transferencias/3e6d89ea-40b5-419d-8fbf-c2bccbe480a7/pain001_3e6d89ea-40b5-419d-8fbf-c2bccbe480a7.xml
+
+
+================================================================================
+Fecha y hora: 2025-07-03 09:43:49
+================================================================================
+=== Info ===
+Archivo AML generado en schemas/transferencias/3e6d89ea-40b5-419d-8fbf-c2bccbe480a7/aml_3e6d89ea-40b5-419d-8fbf-c2bccbe480a7.xml
+
+
+================================================================================
+Fecha y hora: 2025-07-03 09:45:05
+================================================================================
+=== Error ===
+Token no disponible o expirado
+
+================================================================================
+Fecha y hora: 2025-07-03 09:45:05
+================================================================================
+=== Info ===
+OAuth: inicio_autorizacion - exito
+
+=== Body de la petición ===
+{
+    "state": "567cf7009927408e9509e1109fbcaf7e",
+    "auth_url": "http://80.78.30.242:9181/oidc/authorize?response_type=code&client_id=7c1e2c53-8cc3-4ea0-bdd6-b3423e76adc7&redirect_uri=https://api.coretransapi.com/oauth2/callback/&scope=sepa_credit_transfers&state=567cf7009927408e9509e1109fbcaf7e&code_challenge_method=S256&code_challenge=wgyRI9LNXjkN4TikKKZJWi_qm39fIaAA1cNw4XoLG84",
+    "code_challenge": "wgyRI9LNXjkN4TikKKZJWi_qm39fIaAA1cNw4XoLG84",
+    "payment_id": "3e6d89ea-40b5-419d-8fbf-c2bccbe480a7"
+}
+
+
+================================================================================
+Fecha y hora: 2025-07-03 09:45:05
+================================================================================
+=== Info ===
+Inicio del flujo OAuth2 desde transferencia
+
+=== Body de la petición ===
+{
+    "verifier": "46UotJ2w9N3Fxz81MeKz0Zli0rLmeZneW_bFqQtJ6cnBskuM1srKUsJOulS10JNHf1TIBvZ-j5lpR0WSdDEsvg",
+    "challenge": "wgyRI9LNXjkN4TikKKZJWi_qm39fIaAA1cNw4XoLG84",
+    "state": "567cf7009927408e9509e1109fbcaf7e"
+}
+
+
+================================================================================
+Fecha y hora: 2025-07-03 09:45:23
+================================================================================
+=== Info ===
+OAuth: inicio_autorizacion - exito
+
+=== Body de la petición ===
+{
+    "state": "ea801eec13b8458484a7c4884dc2395c",
+    "auth_url": "http://80.78.30.242:9181/oidc/authorize?response_type=code&client_id=7c1e2c53-8cc3-4ea0-bdd6-b3423e76adc7&redirect_uri=https://api.coretransapi.com/oauth2/callback/&scope=sepa_credit_transfers&state=ea801eec13b8458484a7c4884dc2395c&code_challenge_method=S256&code_challenge=HL8W4Af-MhUUxgcCOepGdWQXkYHJHMC46sgcfO0PHbg",
+    "code_challenge": "HL8W4Af-MhUUxgcCOepGdWQXkYHJHMC46sgcfO0PHbg",
+    "payment_id": "3e6d89ea-40b5-419d-8fbf-c2bccbe480a7"
+}
+
+
+================================================================================
+Fecha y hora: 2025-07-03 09:45:23
+================================================================================
+=== Info ===
+Inicio del flujo OAuth2 desde transferencia
+
+=== Body de la petición ===
+{
+    "verifier": "q1TcaI4gnqLPL7BtPDuiclKF-H6gkFEg2D8m9H4dTQ_Igf60u0TAk8TeGjEjGkoEDaR5IPWv-YoUTtHXaC5Qog",
+    "challenge": "HL8W4Af-MhUUxgcCOepGdWQXkYHJHMC46sgcfO0PHbg",
+    "state": "ea801eec13b8458484a7c4884dc2395c"
+}
+
+
+================================================================================
+Fecha y hora: 2025-07-03 09:45:49
+================================================================================
+=== Error ===
+Token no disponible o expirado
+
+================================================================================
+Fecha y hora: 2025-07-03 09:45:49
+================================================================================
+=== Info ===
+OAuth: inicio_autorizacion - exito
+
+=== Body de la petición ===
+{
+    "state": "577499fb4f414490b768afbcc705b251",
+    "auth_url": "http://80.78.30.242:9181/oidc/authorize?response_type=code&client_id=7c1e2c53-8cc3-4ea0-bdd6-b3423e76adc7&redirect_uri=https://api.coretransapi.com/oauth2/callback/&scope=sepa_credit_transfers&state=577499fb4f414490b768afbcc705b251&code_challenge_method=S256&code_challenge=iOWq-1Ym98o4fL4gdiskGKU-olg1V5gIpnPIYg7Q464",
+    "code_challenge": "iOWq-1Ym98o4fL4gdiskGKU-olg1V5gIpnPIYg7Q464",
+    "payment_id": "3e6d89ea-40b5-419d-8fbf-c2bccbe480a7"
+}
+
+
+================================================================================
+Fecha y hora: 2025-07-03 09:45:49
+================================================================================
+=== Info ===
+Inicio del flujo OAuth2 desde transferencia
+
+=== Body de la petición ===
+{
+    "verifier": "cyCUCBIQKBuMhAxmbOeIQ0B580n015ppcBYcMNk_k1UyEXxsSCPxiWin0ySrddtrPszFK8MNehqYhM1QNigoGQ",
+    "challenge": "iOWq-1Ym98o4fL4gdiskGKU-olg1V5gIpnPIYg7Q464",
+    "state": "577499fb4f414490b768afbcc705b251"
+}
+

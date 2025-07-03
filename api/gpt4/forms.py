@@ -120,7 +120,10 @@ class SendTransferForm(forms.ModelForm):
     manual_token = forms.CharField(
         required=False,
         label='TOKEN manual',
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Introduce TOKEN manual si aplica'})
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Introduce TOKEN manual si aplica'
+        })
     )
     obtain_otp = forms.BooleanField(
         required=False,
@@ -132,45 +135,63 @@ class SendTransferForm(forms.ModelForm):
         label='OTP manual',
         min_length=6,
         max_length=70,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Introduce OTP manual de 6 a 8 caracteres'})
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Introduce OTP manual de 6 a 8 caracteres'
+        })
     )
     OTP_METHOD_CHOICES = [
-    ('MTAN', 'SMS (MTAN)'),
-    ('PHOTOTAN', 'PhotoTAN'),
-    ('PUSHTAN', 'PushTAN'),
+        ('MTAN', 'SMS (MTAN)'),
+        ('PHOTOTAN', 'PhotoTAN'),
+        ('PUSHTAN', 'PushTAN'),
     ]
     otp_method = forms.ChoiceField(
-    choices=OTP_METHOD_CHOICES,
-    widget=forms.RadioSelect,
-    label='Método de entrega OTP',
-    required=False
+        choices=OTP_METHOD_CHOICES,
+        widget=forms.RadioSelect,
+        label='Método de entrega OTP',
+        required=False
     )
-    
+
     class Meta:
         model = Transfer
-        fields = [
-            'client', 'kid'
-        ]
+        fields = ['client', 'kid']
         widgets = {
             'client': forms.Select(attrs={'class': 'form-control'}),
-            'kid': forms.Select(attrs={'class': 'form-control'}),   
+            'kid': forms.Select(attrs={'class': 'form-control'}),
         }
-             
+
+    def __init__(self, *args, **kwargs):
+        self.context_mode = kwargs.pop('context_mode', 'full')  # 'simple_otp', 'full'
+        super().__init__(*args, **kwargs)
+
+        if self.context_mode == 'simple_otp':
+            # Oculta los campos innecesarios
+            for field in ['obtain_token', 'manual_token', 'obtain_otp', 'otp_method', 'client', 'kid']:
+                self.fields.pop(field, None)
+
     def clean(self):
         cleaned_data = super().clean()
+
+        if self.context_mode == 'simple_otp':
+            manual_otp = cleaned_data.get('manual_otp')
+            if not manual_otp:
+                raise forms.ValidationError('Debes ingresar un código OTP.')
+            return cleaned_data
+
         obtain_token = cleaned_data.get('obtain_token')
         manual_token = cleaned_data.get('manual_token')
         obtain_otp = cleaned_data.get('obtain_otp')
         manual_otp = cleaned_data.get('manual_otp')
+        otp_method = cleaned_data.get('otp_method')
 
         if not obtain_token and not manual_token:
-            raise forms.ValidationError('Debes seleccionar obtener TOKEN o proporcionar uno manualmente.')
+            raise forms.ValidationError('Selecciona obtener TOKEN o proporciona uno manual.')
 
         if not obtain_otp and not manual_otp:
-            raise forms.ValidationError('Debes seleccionar obtener OTP o proporcionar uno manualmente.')
-        
-        if cleaned_data.get('obtain_otp') and not cleaned_data.get('otp_method'):
-            raise forms.ValidationError('Si obtienes OTP automáticamente, debes elegir un método.')
+            raise forms.ValidationError('Selecciona obtener OTP o proporciona uno manual.')
+
+        if obtain_otp and not otp_method:
+            raise forms.ValidationError('Seleccionaste OTP automático pero no elegiste método.')
 
         return cleaned_data
 
