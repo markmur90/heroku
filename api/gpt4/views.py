@@ -63,8 +63,10 @@ from api.gpt4.utils import (
 )
 from api.gpt4.conexion.conexion_banco import (
     make_request,
+    obtener_token,
     resolver_ip_dominio,
     get_settings as banco_settings,
+    solicitar_otp,
 )
 from api.gpt4.conexion.decorators import requiere_conexion_banco
 from api.gpt4.forms import (
@@ -785,7 +787,7 @@ def send_transfer_view6(request, payment_id):
     return render(request, "api/GPT4/send_transfer.html", {"form": form, "transfer": transfer})
 
 
-def send_transfer_view(request, payment_id):
+def send_transfer_view7(request, payment_id):
     """
     Vista completa para:
     1. Autorizar con el Simulador vía OAuth2/SSH
@@ -878,6 +880,95 @@ def send_transfer_view(request, payment_id):
         "transfer": transfer,
         "photo_tan_img": request.session.get('photo_tan_img')
     })
+
+
+@require_http_methods(["GET", "POST"])
+def send_transfer_view(request, payment_id):
+    """
+    Vista de envío de transferencia:
+      GET: Obtiene token automáticamente y lanza desafío OTP (OTP generado).
+           Luego muestra formulario para ingresar OTP.
+      POST: Recibe el OTP ingresado, lo envía al Simulador para completar la transferencia.
+    Todo el flujo se realiza a través de la API del Simulador usando túnel/HTTP seguro.
+    """
+    transfer = get_object_or_404(Transfer, payment_id=payment_id)
+
+    if request.method == "GET":
+        try:
+            # 🔧 Paso 1: Obtener token de acceso del Simulador automáticamente
+            token = obtener_token()  # usa credenciales configuradas (usuario oficial)
+            request.session['access_token'] = token
+            request.session['current_payment_id'] = payment_id
+
+            # 🔧 Paso 2: Solicitar OTP (desafío) automáticamente
+            # Esto crea la transferencia en el Simulador en estado PDNG y genera un OTP
+            respuesta_otp = solicitar_otp(token, payment_id)
+            # Podemos guardar el challenge_id o OTP si se requiere visualizarlo para pruebas
+            challenge_id = respuesta_otp.get("challenge_id")
+            otp_simulado = respuesta_otp.get("otp")  # OTP generado (generalmente no se envía al cliente en producción)
+
+            # Log de control
+            registrar_log(payment_id, tipo_log='OTP', extra_info=f"Desafío OTP generado. ID: {challenge_id}, OTP: {otp_simulado}")
+
+            # Si quisiéramos mostrar el OTP en entorno de prueba, podríamos incluirlo en el mensaje (opcional, no en producción)
+            messages.info(request, "OTP generado y enviado. Por favor ingresa el código OTP para continuar.")
+
+        except Exception as e:
+            logger.error(f"Error en obtención de token/OTP: {e}", exc_info=True)
+            messages.error(request, f"Error al iniciar la autenticación: {e}")
+            return redirect('transfer_detailGPT4', payment_id=payment_id)
+
+        # Preparar formulario simplificado que solo pide OTP
+        form = SendTransferForm(instance=transfer, context_mode='simple_otp')
+        return render(request, "api/GPT4/send_transfer.html", {
+            "form": form,
+            "transfer": transfer,
+            "challenge_id": challenge_id  # se pasa por contexto por si se quiere mostrar o usar
+        })
+
+    # request.method == "POST"
+    form = SendTransferForm(request.POST or None, instance=transfer, context_mode='simple_otp')
+    if not form.is_valid():
+        messages.error(request, "Formulario inválido. Asegúrate de ingresar el OTP.")
+        return redirect('send_transfer_viewGPT4', payment_id=payment_id)
+
+    otp_code = form.cleaned_data.get('manual_otp')
+    token = request.session.get('access_token')
+    if not token:
+        # Si por alguna razón no hay token (sesión expirada), reiniciamos proceso
+        messages.error(request, "La sesión de autorización expiró. Por favor, reinicia el proceso de transferencia.")
+        return redirect('transfer_detailGPT4', payment_id=payment_id)
+
+    try:
+        # 🔧 Paso 3: Enviar OTP al Simulador para completar la transferencia
+        resultado = enviar_transferencia(token, payment_id, otp_code)
+        estado_final = resultado.get("status")
+        registrar_log(payment_id, tipo_log='TRANSFER', extra_info=f"Respuesta Simulador: {resultado}")
+
+        # Actualizar estado de la transferencia local si el Simulador respondió con estado final
+        if estado_final:
+            transfer.status = estado_final
+        else:
+            # Si no se recibió status, intentar obtener estado actual (fallback)
+            try:
+                estado_resp = consultar_estado(token, payment_id)
+                transfer.status = estado_resp.get("status", transfer.status)
+            except Exception as est_e:
+                logger.warning(f"No se pudo consultar el estado final: {est_e}")
+        transfer.save()
+
+        messages.success(request, "Transferencia procesada con éxito.")
+        # Limpieza: remover token y datos temporales de sesión
+        for key in ('access_token', 'token_expires', 'photo_tan_img', 'current_payment_id'):
+            request.session.pop(key, None)
+        return redirect('transfer_detailGPT4', payment_id=payment_id)
+
+    except Exception as e:
+        logger.error(f"Error en envío de transferencia (OTP posiblemente incorrecto): {e}", exc_info=True)
+        registrar_log(payment_id, tipo_log='ERROR', error=str(e), extra_info="Fallo en verificación OTP/transferencia")
+        messages.error(request, f"Error al enviar transferencia: {e}")
+        # No limpiamos token para permitir reintento si es posible
+        return redirect('send_transfer_viewGPT4', payment_id=payment_id)
 
 
 def prueba_conexion_banco(request):

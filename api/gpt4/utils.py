@@ -231,7 +231,11 @@ def registrar_log(
 # ===========================
 def generar_xml_pain001(transferencia: Transfer, payment_id: str) -> str:
     ruta = obtener_ruta_schema_transferencia(payment_id)
-    root = ET.Element("Document", xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03")
+    # Construir el árbol XML conforme al esquema PAIN.001
+    root = ET.Element(
+        "Document",
+        xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"
+    )
     
     cstmr_cdt_trf_initn = ET.SubElement(root, "CstmrCdtTrfInitn")
     grp_hdr = ET.SubElement(cstmr_cdt_trf_initn, "GrpHdr")

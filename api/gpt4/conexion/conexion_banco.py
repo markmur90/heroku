@@ -12,7 +12,8 @@ import requests
 from django.conf import settings
 from api.configuraciones_api.helpers import get_conf
 from api.gpt4.conexion.ssh_utils import ssh_request
-from api.gpt4.utils import registrar_log
+from api.gpt4.models import Transfer
+from api.gpt4.utils import generar_xml_pain001, registrar_log
 
 @lru_cache()
 def get_settings() -> Dict[str, Any]:
@@ -31,12 +32,12 @@ def get_settings() -> Dict[str, Any]:
         "ALLOW_FAKE_BANK":  get_conf("ALLOW_FAKE_BANK") == "True",
         "BANK_USER":        get_conf("BANK_USER"),
         "BANK_PASS":        get_conf("BANK_PASS"),
-        "login_url":        settings.SIMULADOR_LOGIN_URL,
-        "verify_url":       settings.SIMULADOR_VERIFY_URL,
-        "otp_url":          settings.OTP_URL,
-        "transfer_url":     settings.TRANSFER_URL,
-        "usuario":          settings.SIMULADOR_USERNAME,
-        "password":         settings.SIMULADOR_PASSWORD
+        "login_url":        get_conf("SIMULADOR_LOGIN_URL"),
+        "verify_url":       get_conf("SIMULADOR_VERIFY_URL"),
+        "otp_url":          get_conf("OTP_URL"),
+        "transfer_url":     get_conf("TRANSFER_URL"),
+        "usuario":          get_conf("SIMULADOR_USERNAME"),
+        "password":         get_conf("SIMULADOR_PASSWORD")
     }
 
 
@@ -177,9 +178,19 @@ def login_simulador():
     })
     return response.json()["token"]
 
-def obtener_transferencia(payment_id):
-    response = requests.get(f"{HEROKU_BASE}/schemas/transferencias/{payment_id}/pain001_{payment_id}.xml")
-    return response.text
+def obtener_transferencia(payment_id: str) -> str:
+    """
+    Obtiene el XML PAIN.001 de la transferencia desde el modelo y lo devuelve como cadena.
+    """
+    try:
+        transfer = Transfer.objects.get(payment_id=payment_id)
+    except ObjectDoesNotExist:
+        raise ValueError(f"Transferencia con payment_id '{payment_id}' no encontrada en la base de datos.")
+
+    # Generar el XML PAIN.001 en memoria
+    xml_content = generar_xml_pain001(transfer, payment_id)
+    registrar_log(payment_id, tipo_log='XML', extra_info='XML PAIN.001 obtenido via modelo')
+    return xml_content
 
 def iniciar_transferencia(token, payload):
     response = requests.post(

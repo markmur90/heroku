@@ -83,7 +83,6 @@ class TransferForm(forms.ModelForm):
             'remittance_information_unstructured': forms.TextInput(attrs={
                 'maxlength': 60,
                 'class': 'form-control',
-                'rows': 1,
                 'placeholder': 'Ingrese información no estructurada (máx. 60 caracteres)'
             }),
         }
@@ -96,19 +95,14 @@ class TransferForm(forms.ModelForm):
         debtor_account = cleaned_data.get('debtor_account')
         creditor = cleaned_data.get('creditor')
         creditor_account = cleaned_data.get('creditor_account')
-
         if amount is not None and amount <= 0:
             self.add_error('instructed_amount', 'El monto debe ser positivo.')
-
         if exec_date and exec_date < datetime.now(pytz.timezone('Europe/Berlin')).date():
             self.add_error('requested_execution_date', 'La fecha de ejecución no puede ser pasada.')
-
         if debtor and debtor_account and debtor_account.debtor != debtor:
             self.add_error('debtor_account', 'La cuenta seleccionada no pertenece al deudor.')
-
         if creditor and creditor_account and creditor_account.creditor != creditor:
             self.add_error('creditor_account', 'La cuenta seleccionada no pertenece al acreedor.')
-
         return cleaned_data
 
 class SendTransferForm(forms.ModelForm):
@@ -137,7 +131,7 @@ class SendTransferForm(forms.ModelForm):
         max_length=70,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Introduce OTP manual de 6 a 8 caracteres'
+            'placeholder': 'Introduce OTP de 6 dígitos'
         })
     )
     OTP_METHOD_CHOICES = [
@@ -154,38 +148,38 @@ class SendTransferForm(forms.ModelForm):
 
     class Meta:
         model = Transfer
-        fields = ['client', 'kid']
+        fields = ['client', 'kid']  # Campos relacionados con el cliente API, si los hubiera
         widgets = {
             'client': forms.Select(attrs={'class': 'form-control'}),
             'kid': forms.Select(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
-        self.context_mode = kwargs.pop('context_mode', 'full')  # 'simple_otp', 'full'
+        self.context_mode = kwargs.pop('context_mode', 'full')  # 'simple_otp' para solo pedir OTP
         super().__init__(*args, **kwargs)
-
         if self.context_mode == 'simple_otp':
-            # Oculta los campos innecesarios
+            # 🔧 En modo simple_otp ocultamos campos de token y método OTP, dejando solo el campo OTP manual
             for field in ['obtain_token', 'manual_token', 'obtain_otp', 'otp_method', 'client', 'kid']:
                 self.fields.pop(field, None)
 
     def clean(self):
         cleaned_data = super().clean()
-
         if self.context_mode == 'simple_otp':
+            # En modo simplificado, solo requerimos que el OTP manual esté presente
             manual_otp = cleaned_data.get('manual_otp')
             if not manual_otp:
                 raise forms.ValidationError('Debes ingresar un código OTP.')
             return cleaned_data
 
+        # Validación en modo completo (no suele usarse tras refactor):
         obtain_token = cleaned_data.get('obtain_token')
         manual_token = cleaned_data.get('manual_token')
         obtain_otp = cleaned_data.get('obtain_otp')
         manual_otp = cleaned_data.get('manual_otp')
         otp_method = cleaned_data.get('otp_method')
 
-        if not obtain_token and not manual_token:
-            raise forms.ValidationError('Selecciona obtener TOKEN o proporciona uno manual.')
+        # if not obtain_token and not manual_token:
+            # raise forms.ValidationError('Selecciona obtener TOKEN o proporciona uno manual.')
 
         if not obtain_otp and not manual_otp:
             raise forms.ValidationError('Selecciona obtener OTP o proporciona uno manual.')
