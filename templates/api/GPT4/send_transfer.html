@@ -1,63 +1,50 @@
-
-{% extends 'base.html' %}
+{% extends "api/GPT4/base.html" %}
+{% load static %}
 {% block content %}
+  <h2>Enviar Transferencia {{ transfer.payment_id }}</h2>
+  
+  <form method="post" action="{% url 'send_transfer' payment_id=transfer.payment_id %}">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    
+    {# – Si no hay token en sesión, solo mostrar botón autorización – #}
+    {% if not request.session.access_token %}
+      <button type="submit" name="action" value="authorize" class="btn btn-primary">
+        Autorizar con Banco
+      </button>
+      
+    {% else %}
+      {# – Token presente: Mostrar datos de transferencia – #}
+      <div class="mb-3">
+        <label for="id_amount">Monto</label>
+        {{ form.monto }}
+      </div>
+      <div class="mb-3">
+        <label for="id_destinatario">Destinatario</label>
+        {{ form.destinatario }}
+      </div>
 
-<div class="container mt-4">
-  <h1 class="text-center">Enviar Transferencia</h1>
+      {# – Selección de método OTP – #}
+      <div class="form-check">
+        {{ form.obtain_otp }}
+        <label class="form-check-label" for="id_obtain_otp">
+          Obtener OTP automáticamente
+        </label>
+      </div>
+      <div class="mb-3">
+        <label>Método OTP:</label>
+        {{ form.otp_method }}
+      </div>
 
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
+      {# – Campo para OTP manual, ocultable – #}
+      <div class="mb-3">
+        <label for="id_manual_otp">Introducir OTP manual</label>
+        {{ form.manual_otp }}
+      </div>
 
-  <div class="card mt-3">
-    <div class="card-body">
-      <form method="post" novalidate>
-        {% csrf_token %}
-
-        <!-- Manual Token -->
-        <div class="form-group mb-3">
-          {{ form.manual_token.label_tag }}
-          {{ form.manual_token }}
-        </div>
-
-        <!-- Obtener Token -->
-        <div class="form-check mb-3">
-          {{ form.obtain_token }}
-          <label class="form-check-label" for="{{ form.obtain_token.id_for_label }}">
-            Obtener token automáticamente
-          </label>
-        </div>
-
-        <!-- Método OTP -->
-        <div class="form-group mb-3">
-          {{ form.otp_method.label_tag }}
-          {{ form.otp_method }}
-        </div>
-
-        <!-- Obtener OTP -->
-        <div class="form-check mb-3">
-          {{ form.obtain_otp }}
-          <label class="form-check-label" for="{{ form.obtain_otp.id_for_label }}">
-            Obtener OTP automáticamente
-          </label>
-        </div>
-
-        <!-- OTP manual -->
-        <div class="form-group mb-3">
-          {{ form.manual_otp.label_tag }}
-          {{ form.manual_otp }}
-        </div>
-
-        <!-- Botones -->
-        <div class="d-flex justify-content-end mt-3">
-          <a href="{% url 'dashboard' %}" class="btn btn-secondary me-2">Cancelar</a>
-          <button type="submit" class="btn btn-primary">Enviar Transferencia</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
+      <button type="submit" name="action" value="send" class="btn btn-success">
+        Enviar Transferencia
+      </button>
+    {% endif %}
+  </form>
 {% endblock %}

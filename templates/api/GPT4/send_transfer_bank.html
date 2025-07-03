@@ -54,11 +54,9 @@
         {% endif %}
 
         <div class="mb-3">
-          {{ form.manual_otp.label_tag }}
-          {{ form.manual_otp }}
-          {% if form.manual_otp.errors %}
-            <div class="text-danger">{{ form.manual_otp.errors }}</div>
-          {% endif %}
+          <label for="id_manual_otp" class="form-label fw-semibold">Código de Verificación OTP</label>
+          <input type="text" name="manual_otp" id="id_manual_otp" class="form-control form-control-lg border-primary" placeholder="Ingresa tu OTP aquí" maxlength="6" required>
+          <div class="form-text text-muted">Este código fue enviado por SMS o generado por tu PhotoTAN.</div>
         </div>
 
         <input type="hidden" id="token" value="{{ request.session.access_token }}">

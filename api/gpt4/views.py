@@ -7,7 +7,7 @@ import time
 import uuid
 import requests
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import FileResponse, HttpResponse, JsonResponse, HttpResponseForbidden
+from django.http import FileResponse, HttpResponse, HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template.loader import get_template
@@ -71,6 +71,11 @@ from api.gpt4.forms import (
     ClientIDForm, CreditorAccountForm, CreditorAgentForm, CreditorForm,
     DebtorAccountForm, DebtorForm, KidForm, ScaForm,
     SendTransferForm, TransferForm, ClaveGeneradaForm,
+)
+from .services.transfer_services import (
+    obtener_token_simulador,
+    generar_challenge_simulador,
+    enviar_transferencia_simulador
 )
 
 logger = logging.getLogger(__name__)
@@ -781,62 +786,97 @@ def send_transfer_view6(request, payment_id):
 
 
 def send_transfer_view(request, payment_id):
+    """
+    Vista completa para:
+    1. Autorizar con el Simulador vía OAuth2/SSH
+    2. Obtener OTP (MTAN/PhotoTAN/PushTAN) automáticamente
+    3. Enviar OTP + datos de transferencia
+    Todo el tráfico al Simulador pasa por túnel SSH.
+    """
     transfer = get_object_or_404(Transfer, payment_id=payment_id)
     form = SendTransferForm(request.POST or None, instance=transfer)
-    token = request.session.get('access_token')
-    token_expiry = request.session.get('token_expires', 0)
+
+    token   = request.session.get('access_token')
+    expires = request.session.get('token_expires', 0)
 
     if request.method == "POST":
+        action = request.POST.get('action')
+
+        # ── 1) Inicio de autorización ─────────────────────────────
+        if action == "authorize":
+            try:
+                token, expires = obtener_token_simulador(
+                    username="493069k1",
+                    password="bar1588623"
+                )
+                request.session['access_token']  = token
+                request.session['token_expires'] = expires
+                messages.success(request, "Autorización completada.")
+            except Exception as e:
+                registrar_log(payment_id, 'ERROR_AUTH', error=str(e))
+                messages.error(request, f"Error al autorizar: {e}")
+            return redirect('send_transfer', payment_id=payment_id)
+
+        # ── 2) Validación del formulario ───────────────────────────
         if not form.is_valid():
-            registrar_log(transfer.payment_id, tipo_log='ERROR', error="Formulario inválido", extra_info=str(form.errors))
-            messages.error(request, "Formulario inválido. Revisa los campos.")
-            return redirect('transfer_detailGPT4', payment_id=payment_id)
+            registrar_log(payment_id, 'ERROR_FORM', error=form.errors.as_json())
+            messages.error(request, "Formulario inválido.")
+            return redirect('send_transfer', payment_id=payment_id)
 
-        if not token or time.time() > token_expiry - 60:
-            registrar_log(transfer.payment_id, tipo_log='AUTH', error="Token no disponible o expirado")
-            request.session['return_to_send'] = True
-            return redirect(f"{reverse('oauth2_authorize')}?payment_id={payment_id}")
+        # ── 3) Renovación de token si expiró ──────────────────────
+        if not token or time.time() > expires - 60:
+            registrar_log(payment_id, 'INFO', extra_info="Token ausente/expirado")
+            return redirect('send_transfer', payment_id=payment_id)
 
-        manual_token = form.cleaned_data['manual_token']
-        final_token = manual_token or token
-
-        try:
-            otp = form.cleaned_data.get('manual_otp')
-            if form.cleaned_data['obtain_otp']:
-                method = form.cleaned_data.get('otp_method')
-                if method == 'MTAN':
-                    challenge_id = crear_challenge_mtan(transfer, final_token, transfer.payment_id)
-                    transfer.auth_id = challenge_id
-                    transfer.save()
-                    messages.success(request, f"OTP generado (simulado): {challenge_id}")
-                    registrar_log(transfer.payment_id, tipo_log='OTP', extra_info=f"MTAN ID {challenge_id}")
-                    return redirect('transfer_update_scaGPT4', payment_id=transfer.payment_id)
-                elif method == 'PHOTOTAN':
-                    challenge_id, img64 = crear_challenge_phototan(transfer, final_token, transfer.payment_id)
+        # ── 4) Generar OTP si se solicitó ──────────────────────────
+        if form.cleaned_data.get('obtain_otp'):
+            method = form.cleaned_data.get('otp_method')
+            try:
+                # MTAN, PHOTOTAN o PUSHTAN
+                cid, img64 = generar_challenge_simulador(
+                    payment_id=payment_id,
+                    token=token,
+                    method=method
+                )
+                transfer.auth_id = cid
+                transfer.save()
+                if method == 'PHOTOTAN':
                     request.session['photo_tan_img'] = img64
-                    transfer.auth_id = challenge_id
-                    transfer.save()
-                    messages.success(request, f"PhotoTAN generado.")
-                    registrar_log(transfer.payment_id, tipo_log='OTP', extra_info=f"PhotoTAN ID {challenge_id}")
-                    return redirect('transfer_update_scaGPT4', payment_id=transfer.payment_id)
+                registrar_log(payment_id, 'OTP_GEN', extra_info=f"{method} {cid}")
+                messages.success(request, f"{method} generado: {cid}")
+            except Exception as e:
+                registrar_log(payment_id, 'ERROR_OTP', error=str(e))
+                messages.error(request, f"Error al generar {method}: {e}")
+            return redirect('send_transfer', payment_id=payment_id)
 
-            if otp:
-                status, result = enviar_transferencia_simulador(transfer.payment_id, final_token, otp)
-                if status:
-                    messages.success(request, "Transferencia enviada correctamente.")
-                    registrar_log(transfer.payment_id, tipo_log='TRANSFER', extra_info="Transferencia completada")
-                    return redirect('dashboard')
-                else:
-                    messages.error(request, f"Error al enviar transferencia: {result}")
-                    registrar_log(transfer.payment_id, tipo_log='ERROR', error=result)
+        # ── 5) Envío definitivo de la transferencia ────────────────
+        otp = form.cleaned_data.get('manual_otp')
+        if not otp:
+            messages.error(request, "Debes obtener o introducir el OTP.")
+            return redirect('send_transfer', payment_id=payment_id)
 
-        except Exception as e:
-            messages.error(request, f"Error interno: {str(e)}")
-            registrar_log(transfer.payment_id, tipo_log='ERROR', error=str(e))
+        success, result = enviar_transferencia_simulador(
+            payment_id=payment_id,
+            token=token,
+            otp_code=otp
+        )
+        if success:
+            registrar_log(payment_id, 'TRANSFER_OK', extra_info=str(result))
+            messages.success(request, "Transferencia procesada con éxito.")
+            # Limpieza de sesión tras éxito
+            for key in ('access_token', 'token_expires', 'photo_tan_img'):
+                request.session.pop(key, None)
+            return redirect('transfer_detailGPT4', payment_id=payment_id)
+        else:
+            registrar_log(payment_id, 'ERROR_TRANSFER', error=result)
+            messages.error(request, f"Error en transferencia: {result}")
+            return redirect('send_transfer', payment_id=payment_id)
 
-    return render(request, 'api/GPT4/send_transfer.html', {
-        'form': form,
-        'transfer': transfer
+    # ── GET: Mostrar formulario y estado ────────────────────────
+    return render(request, "api/GPT4/send_transfer.html", {
+        "form": form,
+        "transfer": transfer,
+        "photo_tan_img": request.session.get('photo_tan_img')
     })
 
 
