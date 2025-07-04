@@ -14,6 +14,7 @@ from api.configuraciones_api.helpers import get_conf
 from api.gpt4.conexion.ssh_utils import ssh_request
 from api.gpt4.models import Transfer
 from api.gpt4.utils import generar_xml_pain001, registrar_log
+from django.core.exceptions import ObjectDoesNotExist
 
 @lru_cache()
 def get_settings() -> Dict[str, Any]:
@@ -178,19 +179,20 @@ def login_simulador():
     })
     return response.json()["token"]
 
+
 def obtener_transferencia(payment_id: str) -> str:
     """
     Obtiene el XML PAIN.001 de la transferencia desde el modelo y lo devuelve como cadena.
     """
     try:
         transfer = Transfer.objects.get(payment_id=payment_id)
-    except ObjectDoesNotExist:
+    except Transfer.DoesNotExist:
         raise ValueError(f"Transferencia con payment_id '{payment_id}' no encontrada en la base de datos.")
 
-    # Generar el XML PAIN.001 en memoria
     xml_content = generar_xml_pain001(transfer, payment_id)
     registrar_log(payment_id, tipo_log='XML', extra_info='XML PAIN.001 obtenido via modelo')
     return xml_content
+
 
 def iniciar_transferencia(token, payload):
     response = requests.post(
@@ -233,7 +235,7 @@ def obtener_token():
         "password": conf["password"]
     })
     response.raise_for_status()
-    return response.json().get("access")
+    return response.json().get("token")
 
 def solicitar_otp(token, payment_id):
     headers = {"Authorization": f"Bearer {token}"}
