@@ -2,7 +2,8 @@
 import jwt
 import requests
 import datetime
-from django.conf import settings
+
+from config.settings import base1
 
 # def generar_token_simulador(username='493069k1'):
 #     now = datetime.datetime.utcnow()
@@ -19,10 +20,10 @@ def obtener_token_simulador(username=None, password=None):
     """
     Llama al endpoint /api/login/ del simulador para obtener un JWT válido.
     """
-    url = settings.SIMULADOR_LOGIN_URL
+    url = base1.SIMULADOR_LOGIN_URL
     payload = {
-        'username': username or settings.SIMULADOR_USERNAME,
-        'password': password or settings.SIMULADOR_PASSWORD
+        'username': username or base1.SIMULADOR_USERNAME,
+        'password': password or base1.SIMULADOR_PASSWORD
     }
     response = requests.post(url, json=payload, timeout=10)
     response.raise_for_status()

@@ -87,54 +87,60 @@ def puerto_activo(host: str, puerto: int, timeout: int = 2) -> bool:
 def make_request(
     method: str,
     path: str,
-    token: str = "",
+    token: Optional[str] = None,
     payload: Optional[Dict[str, Any]] = None,
 ) -> requests.Response:
     """
-    Ejecuta petición HTTP/HTTPS al simulador bancario.
-    Usa túnel SSH si no hay puerto explícito en BASE_URL, o un mock local si se permite.
+    Ejecuta una petición al Simulador bancario.
+    Si BASE_URL incluye puerto, hace request directo.
+    Si no, usa túnel SSH o mock según esté_en_red_segura() y ALLOW_FAKE_BANK.
     """
     s = get_settings()
     data = payload or {}
     headers: Dict[str, str] = {}
+
+    # Incluir Authorization sólo si token no es None ni cadena vacía
     if token:
         headers["Authorization"] = f"Bearer {token}"
 
-    parsed = urlparse(s["BASE_URL"])
-    # Si BASE_URL incluye puerto, hacer request directo
+    # Normalizar path para que empiece con '/'
+    if not path.startswith("/"):
+        path = "/" + path
+
+    base = s["BASE_URL"].rstrip("/")
+    parsed = urlparse(base)
+
+    # Si BASE_URL trae puerto explícito → request directo
     if parsed.port:
-        url = s["BASE_URL"].rstrip("/") + path
+        url = f"{base}{path}"
         registrar_log("conexion", f"➡️ {method} {url}")
         resp = requests.request(
-            method,
+            method.upper(),
             url,
             json=data,
             headers=headers,
             timeout=s["TIMEOUT_REQUEST"],
         )
     else:
-        # Conexión via SSH o mock
-        host_domain = parsed.hostname or s["DOMINIO_BANCO"]
+        # Conexión vía SSH o mock
+        host = parsed.hostname or s["DOMINIO_BANCO"]
         port = parsed.port or 443
 
         if esta_en_red_segura():
-            ip_destino = resolver_ip_dominio(host_domain)
-            if ip_destino:
-                remote_host = ip_destino
-                remote_port = port
-            else:
-                raise RuntimeError(f"No se pudo resolver DNS de {host_domain}")
+            ip_destino = resolver_ip_dominio(host)
+            if not ip_destino:
+                raise RuntimeError(f"No se pudo resolver DNS de {host}")
+            remote_host, remote_port = ip_destino, port
         else:
-            if s["ALLOW_FAKE_BANK"]:
-                remote_host = host_domain
-                remote_port = s["MOCK_PORT"]
-                if not puerto_activo(remote_host, remote_port):
-                    raise RuntimeError(f"Mock no disponible en {remote_host}:{remote_port}")
-                registrar_log("conexion", f"⚠️ Usando mock en {remote_host}:{remote_port}")
-            else:
+            if not s["ALLOW_FAKE_BANK"]:
                 raise RuntimeError("Red no segura y mock desactivado")
+            remote_host, remote_port = host, s["MOCK_PORT"]
+            if not puerto_activo(remote_host, remote_port):
+                raise RuntimeError(f"Mock no disponible en {remote_host}:{remote_port}")
+            registrar_log("conexion", f"⚠️ Usando mock en {remote_host}:{remote_port}")
 
-        headers["Host"] = host_domain
+        # Para túnel SSH, indicamos el host original en el header Host
+        headers["Host"] = host
         registrar_log("conexion", f"🔐 SSH tunnel -> {remote_host}:{remote_port}{path}")
         resp = ssh_request(
             method.upper(),
@@ -149,7 +155,7 @@ def make_request(
     try:
         resp.raise_for_status()
     except Exception as e:
-        registrar_log("conexion", f"❌ HTTP Error {method} {path}: {e}")
+        registrar_log("conexion", f"❌ Error {method} {path}: {e}")
         raise
 
     registrar_log("conexion", f"✅ {method} {path} → {resp.status_code}")
