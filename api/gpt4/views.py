@@ -682,7 +682,7 @@ def list_logs(request):
         logs = logs.filter(tipo_log__iexact=tipo_log)
 
     logs = logs.order_by('-created_at')[:500]
-    choices = LogTransferencia._meta.get_field('tipo_log').choices
+    choices = LogTransferencia._meta.get_field('tipo_log')
 
     return render(request, 'api/GPT4/list_logs.html', {
         "logs": logs,
