@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}Configuraciones API{% endblock %}
+
+{% block content %}
+<style>
+  .custom-card {
+    border-radius: 1rem;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    background: linear-gradient(135deg, #fff 0%, #f1f3f5 100%);
+    border: none;
+  }
+  .custom-card-header {
+    background: linear-gradient(45deg, #4b555e, #8b99a7);
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.2rem;
+    padding: 0.75rem 1.2rem;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+  }
+  .custom-card-body {
+    padding: 1.2rem;
+  }
+  .table-sm td, .table-sm th {
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.88rem;
+  }
+  .dataTables_wrapper .dataTables_paginate {
+  margin-top: 1.2rem;
+  margin-bottom: 1.2rem;
+  }
+
+  .btn-editar {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+  }
+  .btn-editar:hover {
+    background-color: #357ab7;
+    color: white;
+  }
+  .btn-eliminar {
+    background-color: #6f42c1;
+    color: white;
+    border: none;
+  }
+  .btn-eliminar:hover {
+    background-color: #5936a2;
+    color: white;
+  }
+  .valor-max-width {
+    max-width: 250px;
+  }
+</style>
+
+
+<div class="container mt-4">
+  <div class="card custom-card">
+    <div class="custom-card-header">
+      📦 Configuraciones API
+    </div>
+    <div class="custom-card-body">
+      <a href="{% url 'crear_configuracion' %}" class="btn btn-sm btn-primary mb-3">➕ Nueva configuración</a>
+
+      <!-- Tabla -->
+      <div class="table-responsive">
+        <table id="configTable" class="table table-sm table-bordered table-hover align-middle">
+          <thead class="table-dark text-center">
+            <tr>
+              <th>Entorno</th>
+              <th>Nombre</th>
+              <th>Valor</th>
+              <th>Activo</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for config in configuraciones %}
+              <tr>
+                <td>{{ config.entorno }}</td>
+                <td>{{ config.nombre }}</td>
+                <td class="text-truncate valor-max-width">{{ config.valor|truncatechars:80 }}</td>
+                <td class="text-center">{{ config.activo|yesno:"✅,❌" }}</td>
+                <td class="text-center">
+                  <a href="{% url 'editar_configuracion' config.pk %}" class="btn btn-sm btn-editar">✏️</a>
+                  <a href="{% url 'eliminar_configuracion' config.pk %}" class="btn btn-sm btn-eliminar">🗑</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="text-center">No hay configuraciones registradas.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- DataTables CSS y JS -->
+      <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+      <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+      <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
+      <!-- Inicialización -->
+
+
+      <script>
+        $(document).ready(function() {
+          $('#configTable').DataTable({
+            // 1) row mb-3 crea un espacio debajo de los controles
+            // 2) col-sm-6 agrupa el length en la izquierda y el filter en la derecha
+            dom:
+              '<"row mb-3"' +
+                '<"col-sm-6"l>' +           // l = length (show entries)
+                '<"col-sm-6 text-end"f>' +  // f = filter (search box)
+              '>' +
+              't' +                          // t = la propia tabla
+              '<"row"' +
+                '<"col-sm-6"i>' +            // i = información (Showing x to y…)
+                '<"col-sm-6"p>' +            // p = paginación
+              '>',
+            language: {
+              url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json',
+              search: "Filtrar registros:",
+              searchPlaceholder: "¿Qué quieres ver?"
+            },
+            columnDefs: [
+              { targets: 1, width: '10%' },
+              { targets: 2, width: '50%' },
+              { targets: [3,4], orderable: false }
+            ],
+            order: []
+          });
+        });
+      </script>
+
+
+
+    </div>
+  </div>
+</div>
+{% endblock %}
