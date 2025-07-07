@@ -1,0 +1,81 @@
+<!-- create_transfer.html (sin cambios significativos) -->
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  /* Estilos personalizados ya definidos */
+</style>
+
+<div class="container-fluid">
+  <h1 class="text-center mb-4 display-6 fw-bold">Crear Nueva Transferencia SEPA</h1>
+  <form method="post" class="needs-validation" novalidate>
+    {% csrf_token %}
+
+    <!-- Datos del Deudor -->
+    <div class="card custom-card mb-4">
+      <div class="custom-card-header">Datos del Deudor</div>
+      <div class="card-body custom-card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            {{ form.debtor.label_tag }}
+            {{ form.debtor }}
+            <a href="{% url 'create_debtorGPT4' %}" class="btn btn-link">Crear nuevo deudor</a>
+          </div>
+          <div class="col-md-6">
+            {{ form.debtor_account.label_tag }}
+            {{ form.debtor_account }}
+            <a href="{% url 'create_debtor_accountGPT4' %}" class="btn btn-link">Crear nueva cuenta</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Datos del Acreedor -->
+    <div class="card custom-card mb-4">
+      <div class="custom-card-header">Datos del Acreedor</div>
+      <div class="card-body custom-card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            {{ form.creditor.label_tag }}
+            {{ form.creditor }}
+            <a href="{% url 'create_creditorGPT4' %}" class="btn btn-link">Crear nuevo acreedor</a>
+          </div>
+          <div class="col-md-4">
+            {{ form.creditor_account.label_tag }}
+            {{ form.creditor_account }}
+            <a href="{% url 'create_creditor_accountGPT4' %}" class="btn btn-link">Crear nueva cuenta</a>
+          </div>
+          <div class="col-md-4">
+            {{ form.creditor_agent.label_tag }}
+            {{ form.creditor_agent }}
+            <a href="{% url 'create_creditor_agentGPT4' %}" class="btn btn-link">Crear nuevo agente</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información de la Transferencia -->
+    <div class="card custom-card mb-4">
+      <div class="custom-card-header">Información de la Transferencia</div>
+      <div class="card-body custom-card-body">
+        <div class="row g-3">
+          <div class="col-md-4">{{ form.instructed_amount.label_tag }}{{ form.instructed_amount }}</div>
+          <div class="col-md-4">{{ form.currency.label_tag }}{{ form.currency }}</div>
+          <div class="col-md-4">{{ form.purpose_code.label_tag }}{{ form.purpose_code }}</div>
+        </div>
+        <div class="row g-3 mt-3">
+          <div class="col-md-6">{{ form.requested_execution_date.label_tag }}{{ form.requested_execution_date }}</div>
+          <div class="col-md-6">{{ form.remittance_information_unstructured.label_tag }}{{ form.remittance_information_unstructured }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary me-2">
+        <i class="bi bi-house-door"></i> Dashboard
+      </a>
+      <button type="submit" class="btn btn-primary">Guardar Transferencia</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
