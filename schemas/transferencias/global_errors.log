@@ -1,9 +1,0 @@
-[2025-07-07 01:39:40] ERROR AL GUARDAR LOG EN DB para conexion: el valor es demasiado largo para el tipo character varying(20)
-
-[2025-07-07 01:39:40] ERROR AL GUARDAR LOG EN DB para conexion: el valor es demasiado largo para el tipo character varying(20)
-
-[2025-07-07 01:39:40] ERROR AL GUARDAR LOG EN DB para conexion: el valor es demasiado largo para el tipo character varying(20)
-
-[2025-07-07 01:39:41] ERROR AL GUARDAR LOG EN DB para conexion: el valor es demasiado largo para el tipo character varying(20)
-
-[2025-07-07 01:39:41] ERROR [679f2b65-54df-42a9-9f12-dabd5a4bb1b5]: 403 Client Error: Forbidden for url: http://80.78.30.242:9181/api/challenge
