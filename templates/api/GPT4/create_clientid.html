@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .custom-card { border-radius:1rem; box-shadow:0 8px 20px rgba(0,0,0,0.1); background: linear-gradient(135deg,#fff,#f1f3f5); border:none; transition:transform .3s ease }
+  .custom-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(0,0,0,0.15) }
+  .custom-card-header { background:linear-gradient(45deg,#343a40,#495057); color:#fff; padding:1rem; font-size:1.25rem; border-top-left-radius:1rem; border-top-right-radius:1rem }
+  .custom-card-body { padding:1.5rem }
+</style>
+
+<div class="container-fluid">
+  <h1 class="text-center mb-4 display-6 fw-bold">Crear ClientID</h1>
+  <div class="card custom-card mb-4">
+    <div class="custom-card-header">Nueva Credencial</div>
+    <div class="card-body custom-card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label for="id_codigo" class="form-label">Código</label>
+            {{ form.codigo }}
+          </div>
+          <div class="col-md-9">
+            <label for="id_clientId" class="form-label">Client ID</label>
+            {{ form.clientId }}
+          </div>
+        </div>
+        <div class="d-flex justify-content-end mt-4">
+          <a href="{% url 'create_transferGPT4' %}" class="btn btn-secondary me-2">Cancelar</a>
+          <button type="submit" class="btn btn-primary">Guardar ClientID</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

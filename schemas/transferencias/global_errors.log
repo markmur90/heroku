@@ -1,0 +1,13 @@
+[2025-07-07 03:37:32] ERROR AL GUARDAR LOG EN DB para conexion: el valor es demasiado largo para el tipo character varying(20)
+
+[2025-07-07 03:37:33] ERROR AL GUARDAR LOG EN DB para conexion: el valor es demasiado largo para el tipo character varying(20)
+
+[2025-07-07 03:37:33] ERROR [ec1fc19a-ad93-4f25-8f25-ac79293bb6f3]: 401 Client Error: Unauthorized for url: http://80.78.30.242:9181/api/transferencia?payment_id=ec1fc19a-ad93-4f25-8f25-ac79293bb6f3
+[2025-07-07 03:37:45] ERROR AL GUARDAR LOG EN DB para conexion: el valor es demasiado largo para el tipo character varying(20)
+
+[2025-07-07 03:37:45] ERROR AL GUARDAR LOG EN DB para conexion: el valor es demasiado largo para el tipo character varying(20)
+
+[2025-07-07 03:37:45] ERROR AL GUARDAR LOG EN DB para conexion: el valor es demasiado largo para el tipo character varying(20)
+
+[2025-07-07 03:37:46] ERROR AL GUARDAR LOG EN DB para conexion: el valor es demasiado largo para el tipo character varying(20)
+
