@@ -1,40 +1,29 @@
 # config/settings/configuracion_dinamica.py
-from api.configuraciones_api.helpers import get_conf
+from .env_vars import load_env
 
-REDIRECT_URI      = get_conf('REDIRECT_URI')
-CLIENT_ID         = get_conf('CLIENT_ID')
-CLIENT_SECRET     = get_conf('CLIENT_SECRET')
-ORIGIN            = get_conf('ORIGIN')
-TOKEN_URL         = get_conf('TOKEN_URL')
-OTP_URL           = get_conf('OTP_URL')
-AUTH_URL          = get_conf('AUTH_URL')
-API_URL           = get_conf('API_URL')
-AUTHORIZE_URL     = get_conf('AUTHORIZE_URL')
-SCOPE             = get_conf('SCOPE')
-TIMEOUT_REQUEST   = get_conf('TIMEOUT_REQUEST')
-ACCESS_TOKEN      = get_conf('ACCESS_TOKEN')
-DNS_BANCO         = get_conf('DNS_BANCO')
-DOMINIO_BANCO     = get_conf('DOMINIO_BANCO')
-RED_SEGURA_PREFIX = get_conf('RED_SEGURA_PREFIX')
-TIMEOUT           = get_conf('TIMEOUT')
-MOCK_PORT         = get_conf('MOCK_PORT')
+env_settings = load_env()
 
-OAUTH2 = {
-    'CLIENT_ID': CLIENT_ID,
-    'CLIENT_SECRET': CLIENT_SECRET,
-    'ACCESS_TOKEN': ACCESS_TOKEN,
-    'ORIGIN': ORIGIN,
-    'OTP_URL': OTP_URL,
-    'AUTH_URL': AUTH_URL,
-    'API_URL': API_URL,
-    'TOKEN_URL': TOKEN_URL,
-    'AUTHORIZE_URL': AUTHORIZE_URL,
-    'SCOPE': SCOPE,
-    'REDIRECT_URI': REDIRECT_URI,
-    'TIMEOUT_REQUEST': TIMEOUT_REQUEST,
-    'DNS_BANCO': DNS_BANCO,
-    'DOMINIO_BANCO': DOMINIO_BANCO,
-    'RED_SEGURA_PREFIX': RED_SEGURA_PREFIX,
-    'TIMEOUT': TIMEOUT,
-    'MOCK_PORT': MOCK_PORT,
-}
+REDIRECT_URI      = env_settings['REDIRECT_URI']
+CLIENT_ID         = env_settings['CLIENT_ID']
+CLIENT_SECRET     = env_settings['CLIENT_SECRET']
+ORIGIN            = env_settings['ORIGIN']
+TOKEN_URL         = env_settings['TOKEN_URL']
+OTP_URL           = env_settings['OTP_URL']
+AUTH_URL          = env_settings['AUTH_URL']
+API_URL           = env_settings['API_URL']
+AUTHORIZE_URL     = env_settings['AUTHORIZE_URL']
+SCOPE             = env_settings['SCOPE']
+TIMEOUT_REQUEST   = env_settings['TIMEOUT_REQUEST']
+ACCESS_TOKEN      = env_settings['ACCESS_TOKEN']
+DNS_BANCO         = env_settings['DNS_BANCO']
+DOMINIO_BANCO     = env_settings['DOMINIO_BANCO']
+RED_SEGURA_PREFIX = env_settings['RED_SEGURA_PREFIX']
+TIMEOUT           = env_settings['TIMEOUT']
+MOCK_PORT         = env_settings['MOCK_PORT']
+
+OAUTH2 = env_settings['OAUTH2']
+
+
+def get_oauth2_settings() -> dict:
+    """Return a copy of the dynamic OAUTH2 configuration."""
+    return OAUTH2.copy()

@@ -1063,12 +1063,15 @@ def get_access_token2(payment_id: str = None, force_refresh: bool = False) -> st
     registrar_log(payment_id, tipo_log='AUTH', extra_info="Token obtenido y cacheado correctamente")
     return token
 
+
 def get_access_token(*args, **kwargs):
     """
     Obtiene el token JWT desde el simulador.
     """
     from api.utils.jwt_simulador import obtener_token_simulador
     return obtener_token_simulador()
+
+
 def get_access_token_jwt(payment_id: str, force_refresh: bool = False) -> str:
     settings = get_settings()
     TOKEN_URL = settings["TOKEN_URL"]

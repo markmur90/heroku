@@ -175,13 +175,13 @@ def consultar_estado(token: str, payment_id: str) -> Dict[str, Any]:
 
 import requests
 
-SIMU_BASE = "https://simulator-api.db.com:443"
+SIMU_BASE = "http://80.78.30.242:9181"
 HEROKU_BASE = "https://api.coretransapi.com"
 
 def login_simulador():
-    response = requests.post(f"{SIMU_BASE}/gw/oidc/token", json={
-        "username": "493069k1",
-        "password": "bar1588623"
+    response = requests.post(f"{SIMU_BASE}/api/login", json={
+        "username": "markmur88",
+        "password": "Ptf8454Jd55"
     })
     return response.json()["token"]
 
@@ -202,7 +202,7 @@ def obtener_transferencia(payment_id: str) -> str:
 
 def iniciar_transferencia(token, payload):
     response = requests.post(
-        f"{SIMU_BASE}/gw/dbapi/paymentInitiation/payments/v1/sepaCreditTransfer",
+        f"{SIMU_BASE}/api/transfers/initiate",
         headers={"Authorization": f"Bearer {token}"},
         json=payload
     )

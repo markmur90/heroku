@@ -5,6 +5,7 @@ import environ
 from django.core.exceptions import ImproperlyConfigured
 import dj_database_url
 from django.apps import apps
+from .env_vars import load_env
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -31,12 +32,42 @@ def intentar_cargar_variables(entorno):
         print(f"⚠️  Configuración dinámica no aplicada: {e}")
 
 intentar_cargar_variables(DJANGO_ENV)
+# Agrupar variables de entorno en un diccionario para reutilizarlas
+env_settings = load_env()
 
 # 3. Variables críticas
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
+
+
+# Variables agrupadas desde env_settings
+REDIRECT_URI = env_settings["REDIRECT_URI"]
+CLIENT_ID = env_settings["CLIENT_ID"]
+CLIENT_SECRET = env_settings["CLIENT_SECRET"]
+ORIGIN = env_settings["ORIGIN"]
+TOKEN_URL = env_settings["TOKEN_URL"]
+OTP_URL = env_settings["OTP_URL"]
+AUTH_URL = env_settings["AUTH_URL"]
+API_URL = env_settings["API_URL"]
+AUTHORIZE_URL = env_settings["AUTHORIZE_URL"]
+SCOPE = env_settings["SCOPE"]
+ACCESS_TOKEN = env_settings["ACCESS_TOKEN"]
+TIMEOUT_REQUEST = env_settings["TIMEOUT_REQUEST"]
+DNS_BANCO = env_settings["DNS_BANCO"]
+DOMINIO_BANCO = env_settings["DOMINIO_BANCO"]
+RED_SEGURA_PREFIX = env_settings["RED_SEGURA_PREFIX"]
+TIMEOUT = env_settings["TIMEOUT"]
+MOCK_PORT = env_settings["MOCK_PORT"]
+JWT_SIGNING_KEY = env_settings["JWT_SIGNING_KEY"]
+JWT_VERIFYING_KEY = env_settings["JWT_VERIFYING_KEY"]
+SIMULADOR_SECRET_KEY = env_settings["SIMULADOR_SECRET_KEY"]
+SIMULADOR_API_URL = env_settings["SIMULADOR_API_URL"]
+SIMULADOR_LOGIN_URL = env_settings["SIMULADOR_LOGIN_URL"]
+SIMULADOR_VERIFY_URL = env_settings["SIMULADOR_VERIFY_URL"]
+SIMULADOR_USERNAME = env_settings["SIMULADOR_USERNAME"]
+SIMULADOR_PASSWORD = env_settings["SIMULADOR_PASSWORD"]
 
 
 INSTALLED_APPS = [
@@ -168,68 +199,13 @@ REST_FRAMEWORK = {
 
 OAUTH2_PROVIDER = {'ACCESS_TOKEN_EXPIRE_SECONDS': 3600, 'OIDC_ENABLED': True}
 
-from api.configuraciones_api.loader import get_settings
-
 SIMULATOR_URL   = "http://80.78.30.242:9181"
 TOKEN_ENDPOINT  = f"{SIMULATOR_URL}/api/login/"
 CHALLENGE_URL   = f"{SIMULATOR_URL}/api/challenge"
 TRANSFER_URL    = f"{SIMULATOR_URL}/api/send-transfer"
 STATUS_URL      = f"{SIMULATOR_URL}/api/status-transfer"
 
-BASE_URL="http://80.78.30.242:9181"
-TOKEN_PATH="/oidc/token"
-AUTH_PATH="/auth/challenges"
-SEND_PATH="/payments"
-STATUS_PATH="/payments/status"
-TIMEOUT_REQUEST=10
-ALLOW_FAKE_BANK=True # Para pruebas reales, cambiar ALLOW_FAKE_BANK=False
-
-# URLs de la API externa
-TOKEN_URL="http://80.78.30.242:9181/oidc/token"
-AUTHORIZE_URL="http://80.78.30.242:9181/oidc/authorize"
-OTP_URL="http://80.78.30.242:9181/otp/single"
-AUTH_URL="http://80.78.30.242:9181/auth/challenges"
-API_URL="http://80.78.30.242:9181/payments"
-
-# Configuración específica para el simulador
-SIMULADOR_SECRET_KEY  = os.environ['SIMULADOR_SECRET_KEY']
-SIMULADOR_API_URL     = os.environ['SIMULADOR_API_URL']
-SIMULADOR_LOGIN_URL   = os.environ['SIMULADOR_LOGIN_URL']
-SIMULADOR_VERIFY_URL  = os.environ['SIMULADOR_VERIFY_URL']
-SIMULADOR_USERNAME    = os.environ['SIMULADOR_USERNAME']
-SIMULADOR_PASSWORD    = os.environ['SIMULADOR_PASSWORD']
-
-REDIRECT_URI="https://api.coretransapi.com/oauth2/callback/"
-ORIGIN="https://api.coretransapi.com"
-
-
-SCOPE = "sepa_credit_transfers"
-TIMEOUT_REQUEST = 3600
-
-ACCESS_TOKEN = env('ACCESS_TOKEN')
-CLIENT_ID = env('CLIENT_ID')
-CLIENT_SECRET = env('CLIENT_SECRET')
-
-
-OAUTH2 = {
-    'CLIENT_ID': CLIENT_ID,
-    'CLIENT_SECRET': CLIENT_SECRET,
-    # 'ACCESS_TOKEN': ACCESS_TOKEN,
-    'ORIGIN': ORIGIN,
-    'OTP_URL': OTP_URL,
-    'AUTH_URL': AUTH_URL,
-    'API_URL': API_URL,
-    'TOKEN_URL': TOKEN_URL,
-    'AUTHORIZE_URL': AUTHORIZE_URL,
-    'SCOPE': SCOPE,
-    'REDIRECT_URI': REDIRECT_URI,
-    'TIMEOUT': 3600,
-    'TIMEOUT_REQUEST': 3600,
-
-}
-
-JWT_SIGNING_KEY = "Ptf8454Jd55"
-JWT_VERIFYING_KEY = "Ptf8454Jd55"
+OAUTH2 = env_settings["OAUTH2"]
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
