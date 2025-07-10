@@ -25,7 +25,6 @@ import qrcode
 import jwt
 from cryptography.hazmat.primitives import serialization
 
-from api.gpt4.conexion.conexion_banco import make_request, obtener_token
 from api.gpt4.models import LogTransferencia, Transfer
 
 
@@ -987,6 +986,9 @@ def send_transfer(request, payment_id: str, otp: str) -> dict:
     :return: Parsed JSON response from the bank API
     :raises: Exception if the request fails or is invalid
     """
+    # Local import to avoid circular dependencies
+    from api.gpt4.conexion.conexion_banco import make_request, obtener_token
+
     # 1. Obtain a fresh bank token
     token = obtener_token()
 
