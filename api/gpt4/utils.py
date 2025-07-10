@@ -25,6 +25,7 @@ import qrcode
 import jwt
 from cryptography.hazmat.primitives import serialization
 
+from api.gpt4.conexion.conexion_banco import make_request, obtener_token
 from api.gpt4.models import LogTransferencia, Transfer
 
 
@@ -869,7 +870,7 @@ from django.utils.timezone import now
 
 logger = logging.getLogger(__name__)
 
-def send_transfer(transfer, request):
+def send_transfer5(transfer, request):
     SIMU_BASE = "http://80.78.30.242:9181"
     headers = {k: v for k, v in request.META.items() if k.startswith("HTTP_")}
     pid = transfer.payment_id
@@ -966,6 +967,73 @@ def send_transfer(transfer, request):
 
     logger.info(f"[{transfer.payment_id}] Confirmada con estado {transfer.status}")
     return confirm_data
+
+
+import logging
+from django.shortcuts import get_object_or_404
+from api.gpt4.models import Transfer
+from config.settings.env_vars import load_env
+
+logger = logging.getLogger(__name__)
+
+def send_transfer(request, payment_id: str, otp: str) -> dict:
+    """
+    Refactored function to confirm a bank transfer using the SSH tunnel and domain
+    resolution provided by make_request, with paths loaded from environment variables.
+
+    :param request: Django HttpRequest to extract user for auth_id
+    :param payment_id: Identifier of the transfer to confirm
+    :param otp: One-Time Password code entered by the user
+    :return: Parsed JSON response from the bank API
+    :raises: Exception if the request fails or is invalid
+    """
+    # 1. Obtain a fresh bank token
+    token = obtener_token()
+
+    # 2. Retrieve the Transfer instance for local status update
+    transfer = get_object_or_404(Transfer, payment_id=payment_id)
+
+    # 3. Prepare payload matching the SendTransferForm fields
+    payload = {
+        "payment_id": transfer.payment_id,
+        "debtor_account": transfer.debtor_account.name,
+        "creditor_account": transfer.creditor_account.name,
+        "debtor": transfer.debtor.name,
+        "creditor": transfer.creditor.name,
+        "instructed_amount": float(transfer.instructed_amount),
+        "currency": transfer.currency,
+        "requested_execution_date": str(transfer.requested_execution_date),
+        "purpose_code": transfer.purpose_code,
+        "remittance_information_unstructured": transfer.remittance_information_unstructured,
+        "payment_identification": transfer.payment_identification.name if transfer.payment_identification else None,
+        "auth_id": request.user.username,
+        "status": "PNDG",
+    }
+
+    # 4. Set default headers and include Authorization
+    headers = default_request_headers.copy()
+    headers.update({"Authorization": f"Bearer {token}"})
+
+    # 5. Load endpoint path from environment
+    transfer_path = load_env("API_TRANSFER_PATH")
+
+    # 6. Send confirmation request via SSH tunnel / domain resolver
+    response = make_request(
+        method="POST",
+        path=transfer_path,
+        json=payload,
+        headers=headers,
+    )
+    data = response.json()
+
+    # 7. Update local Transfer model with response status and auth_id
+    status = data.get("status")
+    transfer.status = status or transfer.status
+    transfer.auth_id = data.get("auth_id", transfer.auth_id or "")
+    transfer.save()
+
+    logger.info(f"Transfer {payment_id} confirmed with status={status}")
+    return data
 
 
 

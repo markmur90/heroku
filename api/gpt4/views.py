@@ -723,7 +723,7 @@ def log_oauth_visual_inicio(request):
 
 
 @require_http_methods(["GET", "POST"])
-def send_transfer_view(request, payment_id):
+def send_transfer_view1(request, payment_id):
     # 1) Cargamos la transferencia existente
     transfer = get_object_or_404(Transfer, payment_id=payment_id)
     # 2) Vinculamos el formulario a esa instancia (trae debtor_account, creditor_account, etc.)
@@ -812,6 +812,41 @@ def send_transfer_view(request, payment_id):
         "form": form,
         "challenge_id": request.session.get("bank_challenge_id")
     })
+
+
+def send_transfer_view(request, payment_id):
+    """
+    View to initiate and confirm a bank transfer using OTP.
+    Utilizes send_transfer util for POST confirmation.
+    """
+    # Retrieve transfer and initialize form
+    transfer = get_object_or_404(Transfer, payment_id=payment_id)
+    form = SendTransferForm(request.POST or None, instance=transfer, context_mode='simple_otp')
+
+    if request.method == 'POST':
+        if form.is_valid():
+            otp = form.cleaned_data.get('otp')
+            try:
+                data = send_transfer(request, payment_id, otp)
+                messages.success(request, _('Transfer completed with status %(status)s') % {'status': data.get('status')})
+                logger.info(f"send_transfer_view: transfer {payment_id} succeeded status={data.get('status')}")
+                return redirect(reverse('transfer_detail', args=[payment_id]))
+            except Exception as e:
+                messages.error(request, _('Error sending transfer: %(error)s') % {'error': str(e)})
+                logger.error(f"send_transfer_view: error on transfer {payment_id}: {e}")
+                return redirect(reverse('send_transfer', args=[payment_id]))
+    else:
+        # En get, renderice formulario y active OTP Enviar lógica en la pantalla de formulario si es necesario
+        # The OTP challenge was already initiated in the detail view or separately
+        messages.info(request, _('Please enter the OTP sent to your device.'))
+
+    context = {
+        'transfer': transfer,
+        'form': form,
+    }
+    return render(request, 'transfers/send_transfer.html', context)
+
+
 
 
 def prueba_conexion_banco(request):

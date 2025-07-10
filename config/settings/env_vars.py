@@ -40,6 +40,7 @@ def load_env() -> dict:
         "SIMULADOR_VERIFY_URL": _fetch("SIMULADOR_VERIFY_URL"),
         "SIMULADOR_USERNAME": _fetch("SIMULADOR_USERNAME"),
         "SIMULADOR_PASSWORD": _fetch("SIMULADOR_PASSWORD"),
+        "API_TRANSFER_PATH": _fetch("API_TRANSFER_PATH"),
     }
 
     settings["OAUTH2"] = {
