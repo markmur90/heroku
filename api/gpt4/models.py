@@ -169,7 +169,7 @@ class Transfer(models.Model):
     def get_status_color(self):
         return {
             'PDNG': 'warning',
-            'ACSC': 'success',
+            'ACCP': 'success',
             'RJCT': 'danger',
             'CANC': 'secondary'
         }.get(self.status, 'dark')
