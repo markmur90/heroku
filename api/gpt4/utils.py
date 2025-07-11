@@ -1013,7 +1013,7 @@ def send_transfer(request, payment_id: str, otp: str) -> dict:
     }
 
     # 4. Set default headers and include Authorization
-    headers = default_request_headers.copy()
+    headers = default_request_headers().copy()
     headers.update({"Authorization": f"Bearer {token}"})
 
     # 5. Load endpoint path from environment
@@ -1023,8 +1023,8 @@ def send_transfer(request, payment_id: str, otp: str) -> dict:
     response = make_request(
         method="POST",
         path=transfer_path,
-        json=payload,
-        headers=headers,
+        payload=payload,
+        token=headers,
     )
     data = response.json()
 

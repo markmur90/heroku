@@ -814,7 +814,8 @@ def send_transfer_view1(request, payment_id):
     })
 
 
-def send_transfer_view(request, payment_id):
+
+def send_transfer_view2(request, payment_id):
     """
     View to initiate and confirm a bank transfer using OTP.
     Utilizes send_transfer util for POST confirmation.
@@ -846,6 +847,75 @@ def send_transfer_view(request, payment_id):
     }
     return render(request, 'transfers/send_transfer.html', context)
 
+
+import logging
+from django.contrib import messages
+from django.shortcuts import redirect, get_object_or_404, render
+from django.urls import reverse
+from django.utils.translation import gettext as _
+
+from .utils import send_transfer
+from .models import Transfer
+from .forms import SendTransferForm
+from .conexion.conexion_banco import make_request, obtener_token
+from .utils import default_request_headers
+from config.settings.env_vars import load_env
+
+logger = logging.getLogger(__name__)
+
+def send_transfer_view(request, payment_id):
+    """
+    View to initiate and confirm a bank transfer using PushTAN (push-based OTP).
+    Utiliza un método de envío de desafío OTP vía PUSHTAN en GET y confirme
+    la transferencia en POST mediante send_transfer util.
+    """
+    # Retrieve transfer and initialize form (only for confirmation step)
+    transfer = get_object_or_404(Transfer, payment_id=payment_id)
+    form = SendTransferForm(request.POST or None, instance=transfer, context_mode='simple_otp')
+
+    if request.method == 'POST':
+        # Confirmación de transferencia tras aprobación PushTAN
+        if form.is_valid():
+            otp = form.cleaned_data.get('otp')
+            try:
+                data = send_transfer(request, payment_id, otp)
+                messages.success(request, _('Transfer completed with status %(status)s') % {'status': data.get('status')})
+                logger.info(f"send_transfer_view: transfer {payment_id} succeeded status={data.get('status')}")
+                return redirect(reverse('transfer_detail', args=[payment_id]))
+            except Exception as e:
+                messages.error(request, _('Error sending transfer: %(error)s') % {'error': str(e)})
+                logger.error(f"send_transfer_view: error on transfer {payment_id}: {e}")
+                return redirect(reverse('send_transfer', args=[payment_id]))
+    else:
+        # On GET, initiate PushTAN challenge
+        try:
+            # Obtain bank token
+            token = obtener_token()
+            # Load challenge endpoint and headers
+            challenge_path = load_env("API_PUSH_TAN_PATH")
+            headers = default_request_headers.copy()
+            headers.update({"Authorization": f"Bearer {token}"})
+            # Send PushTAN challenge
+            resp = make_request(
+                method="POST",
+                path=challenge_path,
+                payload={"payment_id": payment_id, "method": "PUSHTAN"},
+                token=headers,
+            )
+            challenge_data = resp.json()
+            # Store challenge ID in session for later confirmation
+            request.session['bank_challenge_id'] = challenge_data.get('challenge_id')
+            messages.info(request, _('A PushTAN challenge has been sent to your banking app.'))
+        except Exception as e:
+            messages.error(request, _('Error initiating PushTAN challenge: %(error)s') % {'error': str(e)})
+            logger.error(f"send_transfer_view: error initiating PushTAN for {payment_id}: {e}")
+            return redirect(reverse('transfer_detail', args=[payment_id]))
+
+    context = {
+        'transfer': transfer,
+        'form': form,
+    }
+    return render(request, 'transfers/send_transfer.html', context)
 
 
 
