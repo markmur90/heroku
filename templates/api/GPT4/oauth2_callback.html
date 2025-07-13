@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Resultado de Autorización{% endblock %}
+{% block content %}
+
+<div class="container-fluid">
+  <h1 class="text-center mb-4 display-6 fw-bold">Resultado de OAuth2</h1>
+  
+  <div class="card mb-4">
+    <div class="card-header">Detalles de Autorización</div>
+    <div class="card-body">
+      {% if request.session.oauth_success %}
+        <div class="alert alert-success">
+          <p class="fw-bold mb-1"><i class="bi bi-check-circle-fill"></i> Autorización Exitosa</p>
+          <p class="mb-0">Token válido hasta: {{ request.session.token_expires|date:"DATETIME_FORMAT" }}</p>
+        </div>
+        
+        <div class="mb-4">
+          <h5>Access Token:</h5>
+          <div class="token-display mb-3">
+            {{ request.session.access_token }}
+            <i class="bi bi-clipboard copy-btn float-end" data-token="{{ request.session.access_token }}"></i>
+          </div>
+          
+          <h5>Refresh Token:</h5>
+          <div class="token-display">
+            {{ request.session.refresh_token }}
+            <i class="bi bi-clipboard copy-btn float-end" data-token="{{ request.session.refresh_token }}"></i>
+          </div>
+        </div>
+      {% else %}
+        <div class="alert alert-danger">
+          <p class="fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Error en Autorización</p>
+          {% for message in messages %}
+            <p>{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+      
+      <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-house-door-fill me-2"></i> Volver al Inicio
+        </a>
+        {% if not request.session.oauth_success %}
+        <a href="{% url 'oauth2_authorize' %}?payment_id={{ request.session.current_payment_id }}" class="btn btn-primary">
+          <i class="bi bi-arrow-repeat me-2"></i> Reintentar
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3 copy-toast-container">
+  <div id="copyToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+      <strong class="me-auto">Copiado</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+    </div>
+    <div class="toast-body">
+      Token copiado al portapapeles
+    </div>
+  </div>
+</div>
+
+<style>
+  .token-display {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+    position: relative;
+  }
+  .copy-btn {
+    cursor: pointer;
+  }
+  .copy-toast-container {
+    z-index: 1100;
+  }
+</style>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        const toast = new bootstrap.Toast(document.getElementById('copyToast'));
+        toast.show();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const token = btn.getAttribute('data-token');
+            copyToClipboard(token);
+        });
+    });
+
+    fetch("{% url 'get_oauth_logs' %}?session_key={{ request.session.session_key }}")
+        .then(response => response.json())
+        .then(data => {
+            const logContainer = document.createElement('div');
+            logContainer.className = 'mt-4';
+            logContainer.innerHTML = `
+                <h5>Registro Técnico:</h5>
+                <pre class="bg-light p-3">${JSON.stringify(data, null, 2)}</pre>
+            `;
+            document.querySelector('.card-body').appendChild(logContainer);
+        });
+});
+</script>
+
+{% endblock %}
