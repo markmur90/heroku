@@ -831,7 +831,7 @@ def send_transfer_view2(request, payment_id):
                 data = send_transfer(request, payment_id, otp)
                 messages.success(request, _('Transfer completed with status %(status)s') % {'status': data.get('status')})
                 logger.info(f"send_transfer_view: transfer {payment_id} succeeded status={data.get('status')}")
-                return redirect(reverse('transfer_detail', args=[payment_id]))
+                return redirect(reverse('transfer_detailGPT4', args=[payment_id]))
             except Exception as e:
                 messages.error(request, _('Error sending transfer: %(error)s') % {'error': str(e)})
                 logger.error(f"send_transfer_view: error on transfer {payment_id}: {e}")
@@ -845,7 +845,7 @@ def send_transfer_view2(request, payment_id):
         'transfer': transfer,
         'form': form,
     }
-    return render(request, 'transfers/send_transfer.html', context)
+    return render(request, 'api/GPT4/send_transfer.html', context)
 
 
 import logging
@@ -874,48 +874,27 @@ def send_transfer_view(request, payment_id):
     form = SendTransferForm(request.POST or None, instance=transfer, context_mode='simple_otp')
 
     if request.method == 'POST':
-        # Confirmación de transferencia tras aprobación PushTAN
         if form.is_valid():
             otp = form.cleaned_data.get('otp')
             try:
                 data = send_transfer(request, payment_id, otp)
                 messages.success(request, _('Transfer completed with status %(status)s') % {'status': data.get('status')})
                 logger.info(f"send_transfer_view: transfer {payment_id} succeeded status={data.get('status')}")
-                return redirect(reverse('transfer_detail', args=[payment_id]))
+                return redirect(reverse('transfer_detailGPT4', args=[payment_id]))
             except Exception as e:
                 messages.error(request, _('Error sending transfer: %(error)s') % {'error': str(e)})
                 logger.error(f"send_transfer_view: error on transfer {payment_id}: {e}")
                 return redirect(reverse('send_transfer', args=[payment_id]))
     else:
-        # On GET, initiate PushTAN challenge
-        try:
-            # Obtain bank token
-            token = obtener_token()
-            # Load challenge endpoint and headers
-            challenge_path = load_env("API_PUSH_TAN_PATH")
-            headers = default_request_headers.copy()
-            headers.update({"Authorization": f"Bearer {token}"})
-            # Send PushTAN challenge
-            resp = make_request(
-                method="POST",
-                path=challenge_path,
-                payload={"payment_id": payment_id, "method": "PUSHTAN"},
-                token=headers,
-            )
-            challenge_data = resp.json()
-            # Store challenge ID in session for later confirmation
-            request.session['bank_challenge_id'] = challenge_data.get('challenge_id')
-            messages.info(request, _('A PushTAN challenge has been sent to your banking app.'))
-        except Exception as e:
-            messages.error(request, _('Error initiating PushTAN challenge: %(error)s') % {'error': str(e)})
-            logger.error(f"send_transfer_view: error initiating PushTAN for {payment_id}: {e}")
-            return redirect(reverse('transfer_detail', args=[payment_id]))
+        # En get, renderice formulario y active OTP Enviar lógica en la pantalla de formulario si es necesario
+        # The OTP challenge was already initiated in the detail view or separately
+        messages.info(request, _('Please enter the OTP sent to your device.'))
 
     context = {
         'transfer': transfer,
         'form': form,
     }
-    return render(request, 'transfers/send_transfer.html', context)
+    return render(request, 'api/GPT4/send_transfer.html', context)
 
 
 

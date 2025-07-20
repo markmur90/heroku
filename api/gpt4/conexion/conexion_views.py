@@ -32,19 +32,24 @@ def send_transfer_bank_view(request, payment_id):
     # 2) Vinculamos el formulario a esa instancia para que traiga debtor_account, creditor_account, etc.
     form = SendTransferForm(request.POST or None, instance=transfer, context_mode='simple_otp')
     conf = get_settings()
+    tokek_path = conf["TOKEN_PATH"]
+    auth_path = conf["AUTH_PATH"]
+    send_path = conf["SEND_PATH"]
 
     if request.method == "GET":
         try:
             # 3) Obtener token automáticamente
             token = obtener_token()
             request.session["bank_token"] = token
-
+            # auth_url = get_conf()
             # 4) Autorizar OAuth2 simulado en el simulador
-            make_request("GET", f"/gw/oidc/authorize?payment_id={payment_id}", token=None)
+            # make_request("GET", f"/gw/oidc/authorize?payment_id={payment_id}", token=None)
+            make_request("GET", f"{token_path}?payment_id={payment_id}", token=None)
 
             # 5) Solicitar OTP al simulador
             resp = make_request(
-                "POST", "/gw/dbapi/auth/challenges",
+                # "POST", "/gw/dbapi/auth/challenges",
+                "POST", auth_path,
                 token=token,
                 payload={"payment_id": payment_id}
             )
@@ -123,7 +128,8 @@ def prueba_conexion_banco(request):
     Prueba la conexión bancaria real o fake.
     """
     try:
-        resp = make_request("GET", "/api/transferencia")
+        # resp = make_request("GET", "/api/transferencia")
+        resp = make_request("GET", "$send_path")
         data = resp.json()
         return JsonResponse({"estado": "ok", "respuesta": data})
     except Exception as e:

@@ -1,0 +1,1267 @@
+
+NoReverseMatch at /app/gpt4/transfers/0f1e159b-1021-4ff4-929e-0593b5f306dc/send/
+
+Reverse for 'transfer_detail' not found. 'transfer_detail' is not a valid view function or pattern name.
+
+Request Method: 	GET
+Request URL: 	http://0.0.0.0:8000/app/gpt4/transfers/0f1e159b-1021-4ff4-929e-0593b5f306dc/send/
+Django Version: 	5.2.3
+Exception Type: 	NoReverseMatch
+Exception Value: 	
+
+Reverse for 'transfer_detail' not found. 'transfer_detail' is not a valid view function or pattern name.
+
+Exception Location: 	/home/markmur88/envAPP/lib/python3.13/site-packages/django/urls/resolvers.py, line 831, in _reverse_with_prefix
+Raised during: 	api.gpt4.views.send_transfer_view
+Python Executable: 	/home/markmur88/envAPP/bin/python3
+Python Version: 	3.13.3
+Python Path: 	
+
+['/home/markmur88/api_bank_h2',
+ '/home/markmur88/envAPP/bin',
+ '/usr/lib/python313.zip',
+ '/usr/lib/python3.13',
+ '/usr/lib/python3.13/lib-dynload',
+ '/home/markmur88/envAPP/lib/python3.13/site-packages']
+
+Server time: 	Mon, 14 Jul 2025 07:18:09 +0200
+Traceback Switch to copy-and-paste view
+
+    /home/markmur88/api_bank_h2/api/gpt4/views.py, line 893, in send_transfer_view
+
+                    token = obtener_token()
+                                 ^^^^^^^^^^^^^^^
+
+         …
+    Local vars
+    /home/markmur88/api_bank_h2/api/gpt4/conexion/conexion_banco.py, line 238, in obtener_token
+
+            conf = get_settings()
+                        ^^^^^^^^^^^^^^
+
+         …
+    /home/markmur88/api_bank_h2/api/gpt4/conexion/conexion_banco.py, line 39, in get_settings
+
+                "transfer_url":     get_conf("TRANSFER_URL"),
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+         …
+    /home/markmur88/api_bank_h2/api/configuraciones_api/helpers.py, line 14, in get_conf
+
+            return obtener_config(*args, **kwargs)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+         …
+    Local vars
+    /home/markmur88/api_bank_h2/api/configuraciones_api/helpers.py, line 7, in obtener_config
+
+                conf = ConfiguracionAPI.objects.get(nombre=nombre, entorno=entorno)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+         …
+    Local vars
+    /home/markmur88/envAPP/lib/python3.13/site-packages/django/db/models/manager.py, line 87, in manager_method
+
+                        return getattr(self.get_queryset(), name)(*args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+         …
+    Local vars
+    /home/markmur88/envAPP/lib/python3.13/site-packages/django/db/models/query.py, line 636, in get
+
+                raise self.model.MultipleObjectsReturned(
+                     ^
+
+         …
+    Local vars
+    During handling of the above exception (get() returned more than one ConfiguracionAPI -- it returned 2!), another exception occurred:
+    /home/markmur88/envAPP/lib/python3.13/site-packages/django/core/handlers/exception.py, line 55, in inner
+
+                        response = get_response(request)
+                                       ^^^^^^^^^^^^^^^^^^^^^
+
+         …
+    Local vars
+    /home/markmur88/envAPP/lib/python3.13/site-packages/django/core/handlers/base.py, line 197, in _get_response
+
+                        response = wrapped_callback(request, *callback_args, **callback_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+         …
+    Local vars
+    /home/markmur88/api_bank_h2/api/gpt4/views.py, line 912, in send_transfer_view
+
+                    return redirect(reverse('transfer_detail', args=[payment_id]))
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+         …
+    Local vars
+    /home/markmur88/envAPP/lib/python3.13/site-packages/django/urls/base.py, line 98, in reverse
+
+            resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+         …
+    Local vars
+    /home/markmur88/envAPP/lib/python3.13/site-packages/django/urls/resolvers.py, line 831, in _reverse_with_prefix
+
+                raise NoReverseMatch(msg)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+         …
+    Local vars
+
+Request information
+USER
+
+493069k1
+GET
+
+No GET data
+POST
+
+No POST data
+FILES
+
+No FILES data
+COOKIES
+Variable 	Value
+csrftoken 	
+
+'********************'
+
+messages 	
+
+'.eJzdkE9LAzEQxb_KkHOoqa1CvW2lt20RbUGoZRmzs2lqOyOTbNFvbyriSepZrw_en99br03T7JJwc6CUMJCxzo6dNavUo0YBAS-cFRM99c51Q4TIXlTJZ0kDY43Z2J8yLq-smUbiI3FsxcJ4MnLXk5fhecetML3Fz6YRwzOyLyMQ0Od4xBZ_6VsqcupIiX0xeaVigXd4nNcX1byGQEyKrST4AsADcaYzoacjZqqiBTrmiDlygLs-bZfVAvwW93viQDewECizU6bTWV0MvaL_pnhFRZhWD7NmdV8DFUGl7QuR8D-_769BbD4A1y0Afw:1ubBZl:NFw6_vHPktNqW07tm2ZsJPxZ2-bkZRYyoONCwgK5ljs'
+
+sessionid 	
+
+'********************'
+
+META
+Variable 	Value
+HTTP_ACCEPT 	
+
+'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+
+HTTP_ACCEPT_ENCODING 	
+
+'gzip, deflate'
+
+HTTP_ACCEPT_LANGUAGE 	
+
+'es-CO'
+
+HTTP_CONNECTION 	
+
+'keep-alive'
+
+HTTP_COOKIE 	
+
+'********************'
+
+HTTP_DNT 	
+
+'1'
+
+HTTP_HOST 	
+
+'0.0.0.0:8000'
+
+HTTP_PRIORITY 	
+
+'u=0, i'
+
+HTTP_REFERER 	
+
+'http://0.0.0.0:8000/dashboard/'
+
+HTTP_UPGRADE_INSECURE_REQUESTS 	
+
+'1'
+
+HTTP_USER_AGENT 	
+
+'Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0'
+
+PATH_INFO 	
+
+'/app/gpt4/transfers/0f1e159b-1021-4ff4-929e-0593b5f306dc/send/'
+
+QUERY_STRING 	
+
+''
+
+RAW_URI 	
+
+'/app/gpt4/transfers/0f1e159b-1021-4ff4-929e-0593b5f306dc/send/'
+
+REMOTE_ADDR 	
+
+'127.0.0.1'
+
+REMOTE_PORT 	
+
+'45232'
+
+REQUEST_METHOD 	
+
+'GET'
+
+SCRIPT_NAME 	
+
+''
+
+SERVER_NAME 	
+
+'0.0.0.0'
+
+SERVER_PORT 	
+
+'8000'
+
+SERVER_PROTOCOL 	
+
+'HTTP/1.1'
+
+SERVER_SOFTWARE 	
+
+'gunicorn/23.0.0'
+
+gunicorn.socket 	
+
+<socket.socket fd=9, family=2, type=1, proto=0, laddr=('127.0.0.1', 8000), raddr=('127.0.0.1', 45232)>
+
+wsgi.errors 	
+
+<gunicorn.http.wsgi.WSGIErrorsWrapper object at 0x7f4d57ec8730>
+
+wsgi.file_wrapper 	
+
+<class 'gunicorn.http.wsgi.FileWrapper'>
+
+wsgi.input 	
+
+<gunicorn.http.body.Body object at 0x7f4d57dc42f0>
+
+wsgi.input_terminated 	
+
+True
+
+wsgi.multiprocess 	
+
+False
+
+wsgi.multithread 	
+
+False
+
+wsgi.run_once 	
+
+False
+
+wsgi.url_scheme 	
+
+'http'
+
+wsgi.version 	
+
+(1, 0)
+
+Settings
+Using settings module config.settings
+Setting 	Value
+ABSOLUTE_URL_OVERRIDES 	
+
+{}
+
+ACCESS_TOKEN 	
+
+'********************'
+
+ADMINS 	
+
+[]
+
+ALLOWED_HOSTS 	
+
+['*']
+
+API_URL 	
+
+'********************'
+
+APPEND_SLASH 	
+
+True
+
+AUTHENTICATION_BACKENDS 	
+
+'********************'
+
+AUTHORIZE_URL 	
+
+'********************'
+
+AUTH_PASSWORD_VALIDATORS 	
+
+'********************'
+
+AUTH_URL 	
+
+'********************'
+
+AUTH_USER_MODEL 	
+
+'********************'
+
+BASE_DIR 	
+
+PosixPath('/home/markmur88/api_bank_h2')
+
+CACHES 	
+
+{'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}
+
+CACHE_MIDDLEWARE_ALIAS 	
+
+'default'
+
+CACHE_MIDDLEWARE_KEY_PREFIX 	
+
+'********************'
+
+CACHE_MIDDLEWARE_SECONDS 	
+
+600
+
+CHALLENGE_URL 	
+
+'http://80.78.30.242:9181/api/challenge'
+
+CLIENT_ID 	
+
+'7c1e2c53-8cc3-4ea0-bdd6-b3423e76adc7'
+
+CLIENT_SECRET 	
+
+'********************'
+
+CORS_ALLOWED_ORIGINS 	
+
+['https://api.db.com',
+ 'https://simulator-api.db.com',
+ 'https://apibank2-54644cdf263f.herokuapp.com',
+ 'https://api.coretransapi.com']
+
+CORS_ALLOW_CREDENTIALS 	
+
+True
+
+CORS_ORIGIN_ALLOW_ALL 	
+
+True
+
+CSRF_COOKIE_AGE 	
+
+31449600
+
+CSRF_COOKIE_DOMAIN 	
+
+None
+
+CSRF_COOKIE_HTTPONLY 	
+
+False
+
+CSRF_COOKIE_NAME 	
+
+'csrftoken'
+
+CSRF_COOKIE_PATH 	
+
+'/'
+
+CSRF_COOKIE_SAMESITE 	
+
+'Lax'
+
+CSRF_COOKIE_SECURE 	
+
+False
+
+CSRF_FAILURE_VIEW 	
+
+'django.views.csrf.csrf_failure'
+
+CSRF_HEADER_NAME 	
+
+'HTTP_X_CSRFTOKEN'
+
+CSRF_TRUSTED_ORIGINS 	
+
+[]
+
+CSRF_USE_SESSIONS 	
+
+False
+
+DATABASES 	
+
+{'default': {'ATOMIC_REQUESTS': False,
+             'AUTOCOMMIT': True,
+             'CONN_HEALTH_CHECKS': False,
+             'CONN_MAX_AGE': 600,
+             'DISABLE_SERVER_SIDE_CURSORS': False,
+             'ENGINE': 'django.db.backends.postgresql',
+             'HOST': 'localhost',
+             'NAME': 'mydatabase',
+             'OPTIONS': {'sslmode': 'require'},
+             'PASSWORD': '********************',
+             'PORT': 5432,
+             'TEST': {'CHARSET': None,
+                      'COLLATION': None,
+                      'MIGRATE': True,
+                      'MIRROR': None,
+                      'NAME': None},
+             'TIME_ZONE': None,
+             'USER': 'markmur88'}}
+
+DATABASE_PSQL 	
+
+{'default': {'ATOMIC_REQUESTS': False,
+             'AUTOCOMMIT': True,
+             'CONN_HEALTH_CHECKS': False,
+             'CONN_MAX_AGE': 600,
+             'DISABLE_SERVER_SIDE_CURSORS': False,
+             'ENGINE': 'django.db.backends.postgresql',
+             'HOST': 'localhost',
+             'NAME': 'mydatabase',
+             'OPTIONS': {'sslmode': 'require'},
+             'PASSWORD': '********************',
+             'PORT': 5432,
+             'TEST': {'CHARSET': None,
+                      'COLLATION': None,
+                      'MIGRATE': True,
+                      'MIRROR': None,
+                      'NAME': None},
+             'TIME_ZONE': None,
+             'USER': 'markmur88'}}
+
+DATABASE_ROUTERS 	
+
+[]
+
+DATABASE_SQLITE 	
+
+{'default': {'ENGINE': 'django.db.backends.sqlite3',
+             'NAME': '/home/markmur88/api_bank_h2/db.sqlite3'}}
+
+DATA_UPLOAD_MAX_MEMORY_SIZE 	
+
+2621440
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS 	
+
+1000
+
+DATA_UPLOAD_MAX_NUMBER_FILES 	
+
+100
+
+DATETIME_FORMAT 	
+
+'N j, Y, P'
+
+DATETIME_INPUT_FORMATS 	
+
+['%Y-%m-%d %H:%M:%S',
+ '%Y-%m-%d %H:%M:%S.%f',
+ '%Y-%m-%d %H:%M',
+ '%m/%d/%Y %H:%M:%S',
+ '%m/%d/%Y %H:%M:%S.%f',
+ '%m/%d/%Y %H:%M',
+ '%m/%d/%y %H:%M:%S',
+ '%m/%d/%y %H:%M:%S.%f',
+ '%m/%d/%y %H:%M']
+
+DATE_FORMAT 	
+
+'N j, Y'
+
+DATE_INPUT_FORMATS 	
+
+['%Y-%m-%d',
+ '%m/%d/%Y',
+ '%m/%d/%y',
+ '%b %d %Y',
+ '%b %d, %Y',
+ '%d %b %Y',
+ '%d %b, %Y',
+ '%B %d %Y',
+ '%B %d, %Y',
+ '%d %B %Y',
+ '%d %B, %Y']
+
+DEBUG 	
+
+True
+
+DEBUG_PROPAGATE_EXCEPTIONS 	
+
+False
+
+DEBUG_TOOLBAR_CONFIG 	
+
+{'INTERCEPT_REDIRECTS': False}
+
+DECIMAL_SEPARATOR 	
+
+'.'
+
+DEFAULT_AUTO_FIELD 	
+
+'django.db.models.BigAutoField'
+
+DEFAULT_CHARSET 	
+
+'utf-8'
+
+DEFAULT_EXCEPTION_REPORTER 	
+
+'django.views.debug.ExceptionReporter'
+
+DEFAULT_EXCEPTION_REPORTER_FILTER 	
+
+'django.views.debug.SafeExceptionReporterFilter'
+
+DEFAULT_FROM_EMAIL 	
+
+'webmaster@localhost'
+
+DEFAULT_INDEX_TABLESPACE 	
+
+''
+
+DEFAULT_TABLESPACE 	
+
+''
+
+DISALLOWED_USER_AGENTS 	
+
+[]
+
+DJANGO_ENV 	
+
+'local'
+
+DNS_BANCO 	
+
+'80.78.30.242'
+
+DOMINIO_BANCO 	
+
+'504e1ef2.host.njalla.net'
+
+EMAIL_BACKEND 	
+
+'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST 	
+
+'localhost'
+
+EMAIL_HOST_PASSWORD 	
+
+'********************'
+
+EMAIL_HOST_USER 	
+
+''
+
+EMAIL_PORT 	
+
+25
+
+EMAIL_SSL_CERTFILE 	
+
+None
+
+EMAIL_SSL_KEYFILE 	
+
+'********************'
+
+EMAIL_SUBJECT_PREFIX 	
+
+'[Django] '
+
+EMAIL_TIMEOUT 	
+
+None
+
+EMAIL_USE_LOCALTIME 	
+
+False
+
+EMAIL_USE_SSL 	
+
+False
+
+EMAIL_USE_TLS 	
+
+False
+
+FILE_UPLOAD_DIRECTORY_PERMISSIONS 	
+
+None
+
+FILE_UPLOAD_HANDLERS 	
+
+['django.core.files.uploadhandler.MemoryFileUploadHandler',
+ 'django.core.files.uploadhandler.TemporaryFileUploadHandler']
+
+FILE_UPLOAD_MAX_MEMORY_SIZE 	
+
+2621440
+
+FILE_UPLOAD_PERMISSIONS 	
+
+420
+
+FILE_UPLOAD_TEMP_DIR 	
+
+None
+
+FIRST_DAY_OF_WEEK 	
+
+0
+
+FIXTURE_DIRS 	
+
+[]
+
+FORCE_SCRIPT_NAME 	
+
+None
+
+FORMAT_MODULE_PATH 	
+
+None
+
+FORMS_URLFIELD_ASSUME_HTTPS 	
+
+False
+
+FORM_RENDERER 	
+
+'django.forms.renderers.DjangoTemplates'
+
+IGNORABLE_404_URLS 	
+
+[]
+
+INSTALLED_APPS 	
+
+['django.contrib.admin',
+ 'django.contrib.auth',
+ 'django.contrib.contenttypes',
+ 'django.contrib.sessions',
+ 'django.contrib.messages',
+ 'django.contrib.staticfiles',
+ 'drf_yasg',
+ 'rest_framework',
+ 'oauth2_provider',
+ 'rest_framework_simplejwt',
+ 'corsheaders',
+ 'debug_toolbar',
+ 'rest_framework.authtoken',
+ 'markdownify',
+ 'sslserver',
+ 'api.configuraciones_api',
+ 'api.core',
+ 'api.authentication',
+ 'api.gpt4']
+
+INTERNAL_IPS 	
+
+['127.0.0.1', '0.0.0.0', '193.150.']
+
+JWT_SIGNING_KEY 	
+
+'********************'
+
+JWT_VERIFYING_KEY 	
+
+'********************'
+
+LANGUAGES 	
+
+[('af', 'Afrikaans'),
+ ('ar', 'Arabic'),
+ ('ar-dz', 'Algerian Arabic'),
+ ('ast', 'Asturian'),
+ ('az', 'Azerbaijani'),
+ ('bg', 'Bulgarian'),
+ ('be', 'Belarusian'),
+ ('bn', 'Bengali'),
+ ('br', 'Breton'),
+ ('bs', 'Bosnian'),
+ ('ca', 'Catalan'),
+ ('ckb', 'Central Kurdish (Sorani)'),
+ ('cs', 'Czech'),
+ ('cy', 'Welsh'),
+ ('da', 'Danish'),
+ ('de', 'German'),
+ ('dsb', 'Lower Sorbian'),
+ ('el', 'Greek'),
+ ('en', 'English'),
+ ('en-au', 'Australian English'),
+ ('en-gb', 'British English'),
+ ('eo', 'Esperanto'),
+ ('es', 'Spanish'),
+ ('es-ar', 'Argentinian Spanish'),
+ ('es-co', 'Colombian Spanish'),
+ ('es-mx', 'Mexican Spanish'),
+ ('es-ni', 'Nicaraguan Spanish'),
+ ('es-ve', 'Venezuelan Spanish'),
+ ('et', 'Estonian'),
+ ('eu', 'Basque'),
+ ('fa', 'Persian'),
+ ('fi', 'Finnish'),
+ ('fr', 'French'),
+ ('fy', 'Frisian'),
+ ('ga', 'Irish'),
+ ('gd', 'Scottish Gaelic'),
+ ('gl', 'Galician'),
+ ('he', 'Hebrew'),
+ ('hi', 'Hindi'),
+ ('hr', 'Croatian'),
+ ('hsb', 'Upper Sorbian'),
+ ('hu', 'Hungarian'),
+ ('hy', 'Armenian'),
+ ('ia', 'Interlingua'),
+ ('id', 'Indonesian'),
+ ('ig', 'Igbo'),
+ ('io', 'Ido'),
+ ('is', 'Icelandic'),
+ ('it', 'Italian'),
+ ('ja', 'Japanese'),
+ ('ka', 'Georgian'),
+ ('kab', 'Kabyle'),
+ ('kk', 'Kazakh'),
+ ('km', 'Khmer'),
+ ('kn', 'Kannada'),
+ ('ko', 'Korean'),
+ ('ky', 'Kyrgyz'),
+ ('lb', 'Luxembourgish'),
+ ('lt', 'Lithuanian'),
+ ('lv', 'Latvian'),
+ ('mk', 'Macedonian'),
+ ('ml', 'Malayalam'),
+ ('mn', 'Mongolian'),
+ ('mr', 'Marathi'),
+ ('ms', 'Malay'),
+ ('my', 'Burmese'),
+ ('nb', 'Norwegian Bokmål'),
+ ('ne', 'Nepali'),
+ ('nl', 'Dutch'),
+ ('nn', 'Norwegian Nynorsk'),
+ ('os', 'Ossetic'),
+ ('pa', 'Punjabi'),
+ ('pl', 'Polish'),
+ ('pt', 'Portuguese'),
+ ('pt-br', 'Brazilian Portuguese'),
+ ('ro', 'Romanian'),
+ ('ru', 'Russian'),
+ ('sk', 'Slovak'),
+ ('sl', 'Slovenian'),
+ ('sq', 'Albanian'),
+ ('sr', 'Serbian'),
+ ('sr-latn', 'Serbian Latin'),
+ ('sv', 'Swedish'),
+ ('sw', 'Swahili'),
+ ('ta', 'Tamil'),
+ ('te', 'Telugu'),
+ ('tg', 'Tajik'),
+ ('th', 'Thai'),
+ ('tk', 'Turkmen'),
+ ('tr', 'Turkish'),
+ ('tt', 'Tatar'),
+ ('udm', 'Udmurt'),
+ ('ug', 'Uyghur'),
+ ('uk', 'Ukrainian'),
+ ('ur', 'Urdu'),
+ ('uz', 'Uzbek'),
+ ('vi', 'Vietnamese'),
+ ('zh-hans', 'Simplified Chinese'),
+ ('zh-hant', 'Traditional Chinese')]
+
+LANGUAGES_BIDI 	
+
+['he', 'ar', 'ar-dz', 'ckb', 'fa', 'ug', 'ur']
+
+LANGUAGE_CODE 	
+
+'en-us'
+
+LANGUAGE_COOKIE_AGE 	
+
+None
+
+LANGUAGE_COOKIE_DOMAIN 	
+
+None
+
+LANGUAGE_COOKIE_HTTPONLY 	
+
+False
+
+LANGUAGE_COOKIE_NAME 	
+
+'django_language'
+
+LANGUAGE_COOKIE_PATH 	
+
+'/'
+
+LANGUAGE_COOKIE_SAMESITE 	
+
+None
+
+LANGUAGE_COOKIE_SECURE 	
+
+False
+
+LOCALE_PATHS 	
+
+[]
+
+LOGGING 	
+
+{'disable_existing_loggers': False,
+ 'formatters': {'simple': {'format': '%(levelname)s %(message)s'},
+                'verbose': {'datefmt': '%Y-%m-%d %H:%M:%S',
+                            'format': '%(asctime)s [%(process)d] '
+                                      '[%(levelname)s] pathname=%(pathname)s '
+                                      'lineno=%(lineno)s funcname=%(funcName)s '
+                                      '%(message)s'}},
+ 'handlers': {'console': {'class': 'logging.StreamHandler',
+                          'formatter': 'verbose',
+                          'level': 'DEBUG'},
+              'null': {'class': 'logging.NullHandler', 'level': 'DEBUG'}},
+ 'loggers': {'testlogger': {'handlers': ['console'], 'level': 'INFO'}},
+ 'version': 1}
+
+LOGGING_CONFIG 	
+
+'logging.config.dictConfig'
+
+LOGIN_REDIRECT_URL 	
+
+'/dashboard/'
+
+LOGIN_URL 	
+
+'/login/'
+
+LOGOUT_REDIRECT_URL 	
+
+None
+
+MANAGERS 	
+
+[]
+
+MEDIA_ROOT 	
+
+'/home/markmur88/api_bank_h2/media'
+
+MEDIA_URL 	
+
+'/media/'
+
+MESSAGE_STORAGE 	
+
+'django.contrib.messages.storage.fallback.FallbackStorage'
+
+MIDDLEWARE 	
+
+('whitenoise.middleware.WhiteNoiseMiddleware',
+ 'django.middleware.security.SecurityMiddleware',
+ 'debug_toolbar.middleware.DebugToolbarMiddleware',
+ 'api.middleware.ExceptionLoggingMiddleware',
+ 'corsheaders.middleware.CorsMiddleware',
+ 'whitenoise.middleware.WhiteNoiseMiddleware',
+ 'django.contrib.sessions.middleware.SessionMiddleware',
+ 'django.middleware.common.CommonMiddleware',
+ 'django.contrib.auth.middleware.AuthenticationMiddleware',
+ 'middleware.oficial_session.DetectarOficialMiddleware',
+ 'django.contrib.messages.middleware.MessageMiddleware',
+ 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+ 'api.core.middleware.CurrentUserMiddleware')
+
+MIGRATION_MODULES 	
+
+{}
+
+MOCK_PORT 	
+
+9181
+
+MONTH_DAY_FORMAT 	
+
+'F j'
+
+NUMBER_GROUPING 	
+
+0
+
+OAUTH2 	
+
+'********************'
+
+OAUTH2_PROVIDER 	
+
+'********************'
+
+ORIGIN 	
+
+'https://api.coretransapi.com'
+
+OTP_URL 	
+
+'http://80.78.30.242:9181/otp/single'
+
+PASSWORD_HASHERS 	
+
+'********************'
+
+PASSWORD_RESET_TIMEOUT 	
+
+'********************'
+
+PREPEND_WWW 	
+
+False
+
+PRIVATE_KEY_KID 	
+
+'********************'
+
+PRIVATE_KEY_PATH 	
+
+'********************'
+
+REDIRECT_URI 	
+
+'https://api.coretransapi.com/oauth2/callback/'
+
+RED_SEGURA_PREFIX 	
+
+'80.78.30'
+
+REST_FRAMEWORK 	
+
+{'DEFAULT_AUTHENTICATION_CLASSES': '********************',
+ 'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',)}
+
+ROOT_URLCONF 	
+
+'config.urls'
+
+SCOPE 	
+
+'sepa_credit_transfers'
+
+SECRET_KEY 	
+
+'********************'
+
+SECRET_KEY_FALLBACKS 	
+
+'********************'
+
+SECURE_CONTENT_TYPE_NOSNIFF 	
+
+True
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY 	
+
+'same-origin'
+
+SECURE_HSTS_INCLUDE_SUBDOMAINS 	
+
+False
+
+SECURE_HSTS_PRELOAD 	
+
+False
+
+SECURE_HSTS_SECONDS 	
+
+0
+
+SECURE_PROXY_SSL_HEADER 	
+
+('HTTP_X_FORWARDED_PROTO', 'https')
+
+SECURE_REDIRECT_EXEMPT 	
+
+[]
+
+SECURE_REFERRER_POLICY 	
+
+'same-origin'
+
+SECURE_SSL_HOST 	
+
+None
+
+SECURE_SSL_REDIRECT 	
+
+False
+
+SERVER_EMAIL 	
+
+'root@localhost'
+
+SESSION_CACHE_ALIAS 	
+
+'default'
+
+SESSION_COOKIE_AGE 	
+
+1800
+
+SESSION_COOKIE_DOMAIN 	
+
+None
+
+SESSION_COOKIE_HTTPONLY 	
+
+True
+
+SESSION_COOKIE_NAME 	
+
+'sessionid'
+
+SESSION_COOKIE_PATH 	
+
+'/'
+
+SESSION_COOKIE_SAMESITE 	
+
+'Lax'
+
+SESSION_COOKIE_SECURE 	
+
+False
+
+SESSION_ENGINE 	
+
+'django.contrib.sessions.backends.db'
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE 	
+
+True
+
+SESSION_FILE_PATH 	
+
+None
+
+SESSION_SAVE_EVERY_REQUEST 	
+
+False
+
+SESSION_SERIALIZER 	
+
+'django.contrib.sessions.serializers.JSONSerializer'
+
+SETTINGS_MODULE 	
+
+'config.settings'
+
+SHORT_DATETIME_FORMAT 	
+
+'m/d/Y P'
+
+SHORT_DATE_FORMAT 	
+
+'m/d/Y'
+
+SIGNING_BACKEND 	
+
+'django.core.signing.TimestampSigner'
+
+SILENCED_SYSTEM_CHECKS 	
+
+[]
+
+SIMPLE_JWT 	
+
+{'ACCESS_TOKEN_LIFETIME': '********************',
+ 'ALGORITHM': 'HS256',
+ 'AUTH_HEADER_TYPES': '********************',
+ 'REFRESH_TOKEN_LIFETIME': '********************',
+ 'SIGNING_KEY': '********************',
+ 'VERIFYING_KEY': '********************'}
+
+SIMULADOR_API_URL 	
+
+'********************'
+
+SIMULADOR_LOGIN_URL 	
+
+'http://80.78.30.242:9181/api/login/'
+
+SIMULADOR_PASSWORD 	
+
+'********************'
+
+SIMULADOR_SECRET_KEY 	
+
+'********************'
+
+SIMULADOR_USERNAME 	
+
+'493069k1'
+
+SIMULADOR_VERIFY_URL 	
+
+'http://80.78.30.242:9181/api/transferencia/verify/'
+
+SIMULATOR_URL 	
+
+'http://80.78.30.242:9181'
+
+STATICFILES_DIRS 	
+
+['/home/markmur88/api_bank_h2/static']
+
+STATICFILES_FINDERS 	
+
+['django.contrib.staticfiles.finders.FileSystemFinder',
+ 'django.contrib.staticfiles.finders.AppDirectoriesFinder']
+
+STATICFILES_STORAGE 	
+
+'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+STATIC_ROOT 	
+
+'/home/markmur88/api_bank_h2/staticfiles'
+
+STATIC_TMP 	
+
+'/home/markmur88/api_bank_h2/static'
+
+STATIC_URL 	
+
+'/static/'
+
+STATUS_URL 	
+
+'http://80.78.30.242:9181/api/status-transfer'
+
+STORAGES 	
+
+{'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+ 'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}}
+
+TEMPLATES 	
+
+[{'APP_DIRS': True,
+  'BACKEND': 'django.template.backends.django.DjangoTemplates',
+  'DIRS': ['/home/markmur88/api_bank_h2/templates'],
+  'OPTIONS': {'context_processors': ['django.template.context_processors.debug',
+                                     'django.template.context_processors.request',
+                                     'django.contrib.auth.context_processors.auth',
+                                     'django.contrib.messages.context_processors.messages',
+                                     'api.context_processors.entorno_actual']}}]
+
+TEST_NON_SERIALIZED_APPS 	
+
+[]
+
+TEST_RUNNER 	
+
+'django.test.runner.DiscoverRunner'
+
+THOUSAND_SEPARATOR 	
+
+','
+
+TIMEOUT 	
+
+300
+
+TIMEOUT_REQUEST 	
+
+1800
+
+TIME_FORMAT 	
+
+'P'
+
+TIME_INPUT_FORMATS 	
+
+['%H:%M:%S', '%H:%M:%S.%f', '%H:%M']
+
+TIME_ZONE 	
+
+'Europe/Berlin'
+
+TOKEN_ENDPOINT 	
+
+'********************'
+
+TOKEN_URL 	
+
+'********************'
+
+TRANSFER_URL 	
+
+'http://80.78.30.242:9181/api/send-transfer'
+
+USE_I18N 	
+
+True
+
+USE_L10N 	
+
+True
+
+USE_OAUTH2_UI 	
+
+'********************'
+
+USE_THOUSAND_SEPARATOR 	
+
+False
+
+USE_TZ 	
+
+True
+
+USE_X_FORWARDED_HOST 	
+
+False
+
+USE_X_FORWARDED_PORT 	
+
+False
+
+WSGI_APPLICATION 	
+
+'config.wsgi.application'
+
+X_FRAME_OPTIONS 	
+
+'DENY'
+
+YEAR_MONTH_FORMAT 	
+
+'F Y'
+
+You’re seeing this error because you have DEBUG = True in your Django settings file. Change that to False, and Django will display a standard page generated by the handler for this status code.
+DJDT

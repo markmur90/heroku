@@ -3,3 +3,4 @@ migrations/*
 .pyc
 .pyo
 .pyd
+docs/api_validator.py
