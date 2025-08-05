@@ -1,0 +1,5 @@
+[2025-07-14 10:13:52] ERROR AL GUARDAR LOG EN DB para conexion: el valor es demasiado largo para el tipo character varying(20)
+
+[2025-07-14 10:13:54] ERROR AL GUARDAR LOG EN DB para conexion: el valor es demasiado largo para el tipo character varying(20)
+
+[2025-07-14 10:13:54] ERROR [6fd7e5c0-5252-4ad5-ac86-af7cce2a7c8d]: 404 Client Error: Not Found for url: http://80.78.30.242:9181/gw/oidc/authorize?payment_id=6fd7e5c0-5252-4ad5-ac86-af7cce2a7c8d
